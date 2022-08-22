@@ -1,9 +1,5 @@
-use super::{
-    chunk::{self, Chunk, CHUNK_SIZE_X},
-    texel::Texel,
-    world::World,
-};
-use crate::util::Vector2I;
+use super::{texel::Texel, utils::*};
+use crate::{components::Chunk, util::Vector2I};
 use sdl2::{
     pixels::{self, Color},
     rect::Rect,
@@ -46,10 +42,10 @@ pub fn gen_chunk(position_index: Vector2I) -> Chunk {
     .cloned()
     .collect();
 
-    let start = World::chunk_index_to_global(&position_index);
+    let start = chunk_index_to_global(&position_index);
     let size = Vector2I {
-        x: chunk::CHUNK_SIZE_X as i32,
-        y: chunk::CHUNK_SIZE_Y as i32,
+        x: Chunk::SIZE_X as i32,
+        y: Chunk::SIZE_Y as i32,
     };
 
     let tex_surface = read_image(DATA_PATH);
@@ -77,13 +73,13 @@ pub fn gen_chunk(position_index: Vector2I) -> Chunk {
                     b: *p_iter.next().unwrap(),
                     a: *p_iter.next().unwrap(),
                 };
-                texels[y * CHUNK_SIZE_X + x] = map_closest_color(p_color, &color_map);
+                texels[y * Chunk::SIZE_X + x] = map_closest_color(p_color, &color_map);
             }
         }
     });
 
     Chunk {
-        position_index,
         texels,
+        is_dirty: false,
     }
 }
