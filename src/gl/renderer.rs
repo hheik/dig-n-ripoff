@@ -1,13 +1,11 @@
 use sdl2::{
     pixels::{Color, PixelFormatEnum},
     render::{Canvas, TextureCreator},
-    surface::Surface,
     video::{Window, WindowContext},
     EventPump, Sdl,
 };
 
-use crate::components::Chunk;
-
+pub const INIT_WINDOW_SIZE: (u32, u32) = (1024, 1024);
 pub const SURFACE_FORMAT: PixelFormatEnum = PixelFormatEnum::RGBA32;
 // pub const SURFACE_FORMAT_BPP: usize = 4;
 // pub const SURFACE_FORMAT: PixelFormatEnum = PixelFormatEnum::Index8;
@@ -23,7 +21,7 @@ pub fn init() -> (
     let video_subsystem = sdl_context.video().unwrap();
 
     let window = video_subsystem
-        .window("rust-sdl2 demo", 1024, 1024)
+        .window("rust-sdl2 demo", INIT_WINDOW_SIZE.0, INIT_WINDOW_SIZE.1)
         .position_centered()
         .build()
         .unwrap();
@@ -68,13 +66,6 @@ pub fn draw(canvas: &mut Canvas<Window>, texture_creator: &TextureCreator<Window
     // }
 
     canvas.present();
-}
-
-pub fn create_chunk_surface() -> Surface<'static> {
-    match Surface::new(Chunk::SIZE_X as u32, Chunk::SIZE_Y as u32, SURFACE_FORMAT) {
-        Ok(surface) => surface,
-        Err(error) => panic!("Failed to create chunk SDL surface: {error:?}"),
-    }
 }
 
 /*

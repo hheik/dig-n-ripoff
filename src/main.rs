@@ -1,6 +1,7 @@
 use components::*;
+use gl::camera::Camera;
 use mst::world_gen;
-use specs::{Builder, RunNow, World, WorldExt};
+use specs::{Builder, DispatcherBuilder, World, WorldExt};
 use std::time::Duration;
 use systems::*;
 use util::{Vector2, Vector2I};
@@ -23,6 +24,14 @@ pub fn main() {
     let mut world = World::new();
     world.register::<Transform>();
     world.register::<Chunk>();
+    world.register::<RenderTarget>();
+
+    let mut camera = Camera {
+        position: Vector2 { x: 0.0, y: 0.0 },
+        scale: 4.0,
+    };
+
+    world.insert(camera);
 
     let now = std::time::SystemTime::now();
     for y in 0..256 / Chunk::SIZE_Y as i32 {
@@ -35,6 +44,7 @@ pub fn main() {
                     y: y as f32,
                 }))
                 .with(chunk)
+                .with(RenderTarget::new(Chunk::SIZE_X, Chunk::SIZE_Y))
                 .build();
         }
     }
@@ -43,9 +53,9 @@ pub fn main() {
         Err(error) => println!("Timer error: {:?}", error),
     }
 
-    let mut terrain_render = TerrainRender;
-    terrain_render.run_now(&world);
-    world.maintain();
+    let mut dispatcher = DispatcherBuilder::new()
+        .with_thread_local(TerrainRender)
+        .build();
 
     // Init window
     let (sdl_context, mut canvas, mut event_pump, texture_creator): (
@@ -58,6 +68,7 @@ pub fn main() {
     let mut frame_counter: u64 = 0;
     'running: loop {
         frame_counter = (frame_counter + 1) % u64::MAX;
+        println!("start of frame: {frame_counter}");
 
         for event in event_pump.poll_iter() {
             match event {
@@ -69,6 +80,8 @@ pub fn main() {
                 _ => {}
             }
         }
+
+        dispatcher.dispatch(&world);
 
         gl::renderer::draw(&mut canvas, &texture_creator);
         ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));

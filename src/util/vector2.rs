@@ -24,7 +24,7 @@ impl<T> VectorComponent for T where
 {
 }
 
-#[derive(PartialEq, Eq, Hash, Clone, Copy)]
+#[derive(PartialEq, Eq, Hash, Clone, Copy, Default)]
 pub struct Vector2<T: VectorComponent> {
     pub x: T,
     pub y: T,

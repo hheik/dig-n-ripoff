@@ -15,7 +15,7 @@ impl Chunk {
     pub fn new() -> Chunk {
         Chunk {
             texels: Self::new_texel_array(),
-            is_dirty: false,
+            is_dirty: true,
         }
     }
 
