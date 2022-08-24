@@ -1,12 +1,12 @@
 use std::collections::HashMap;
 
 use crate::{
-    components::{Chunk, RenderTarget, Transform},
-    gl::{camera::Camera, renderer::SURFACE_FORMAT},
+    components::{Chunk, Transform, RenderTarget},
+    gl::{camera::Camera, renderer::{SURFACE_FORMAT_BPP}},
     mst::texel::TexelID,
 };
-use sdl2::pixels::{Color, PixelFormat};
-use specs::{Entities, Join, Read, ReadStorage, System, Write, WriteStorage};
+use sdl2::{pixels::{Color}};
+use specs::{Entities, Join, Read, ReadStorage, System, WriteStorage};
 
 pub struct TerrainRender;
 impl<'a> System<'a> for TerrainRender {
@@ -14,35 +14,22 @@ impl<'a> System<'a> for TerrainRender {
         Entities<'a>,
         ReadStorage<'a, Chunk>,
         ReadStorage<'a, Transform>,
-        WriteStorage<'a, RenderTarget>,
+        WriteStorage<'a, RenderTarget<'static>>,
         Read<'a, Camera>,
     );
 
     fn run(&mut self, (entity, chunk, transform, mut render_target, camera): Self::SystemData) {
-        let color_map: HashMap<TexelID, u32> = [
-            (
-                0,
-                Color::RGBA(0, 0, 0, 0).to_u32(&PixelFormat::try_from(SURFACE_FORMAT).unwrap()),
-            ),
-            (
-                1,
-                Color::RGBA(158, 127, 99, 255)
-                    .to_u32(&PixelFormat::try_from(SURFACE_FORMAT).unwrap()),
-            ),
-            (
-                2,
-                Color::RGBA(70, 142, 71, 255)
-                    .to_u32(&PixelFormat::try_from(SURFACE_FORMAT).unwrap()),
-            ),
+        let color_map: HashMap<TexelID, (u8, u8, u8 ,u8)> = [
+            ( 0, Color::RGBA(0  , 0  , 0  , 0  ).rgba() ),
+            ( 1, Color::RGBA(158, 127, 99 , 255).rgba() ),
+            ( 2, Color::RGBA(70 , 142, 71 , 255).rgba() ),
         ]
         .iter()
         .cloned()
         .collect();
 
         println!("*** Running TerrainRender ***");
-        for (entity, chunk, transform, render_target) in
-            (&entity, &chunk, &transform, &mut render_target).join()
-        {
+        for (entity, chunk, transform, render_target) in (&entity, &chunk, &transform, &mut render_target).join() {
             println!(
                 "Entity {}.{} : {} [{}]",
                 entity.id(),
@@ -50,10 +37,20 @@ impl<'a> System<'a> for TerrainRender {
                 transform.position,
                 chunk.texels.len()
             );
-            if render_target.is_dirty == true {
-                render_target.buffer = chunk.texels.iter().map(|t| color_map[&t.id]).collect();
-                render_target.is_dirty = false;
-            }
+
+            render_target.surface.with_lock_mut(|p_data| {
+                assert!(p_data.len() == chunk.texels.len() * SURFACE_FORMAT_BPP);
+                
+                // TODO: This doesn't care about bytes_per_pixel
+                for xy in 0..chunk.texels.len() {
+                    let i = xy * SURFACE_FORMAT_BPP;
+                    let (r, g, b, a) = color_map[&chunk.texels[xy].id];
+                    p_data[i + 0] = r;
+                    p_data[i + 1] = g;
+                    p_data[i + 2] = b;
+                    p_data[i + 3] = a;
+                }
+            })
         }
     }
 }

@@ -11,6 +11,14 @@ pub struct Transform {
 }
 
 impl Transform {
+    pub fn new(position: Vector2<f32>) -> Transform {
+        Transform {
+            position,
+            rotation: 0.0,
+            scale: Vector2 { x: 1.0, y: 1.0 },
+        }
+    }
+
     pub fn identity() -> Transform {
         Transform {
             position: Vector2 { x: 0.0, y: 0.0 },
@@ -19,11 +27,8 @@ impl Transform {
         }
     }
 
-    pub fn new(position: Vector2<f32>) -> Transform {
-        Transform {
-            position,
-            rotation: 0.0,
-            scale: Vector2 { x: 1.0, y: 1.0 },
-        }
-    }
+    // Apply transformation to other transform, returning the result
+    // pub fn xform(&self, other: &Transform) -> Transform {
+
+    // }
 }

@@ -1,23 +1,22 @@
+use sdl2::surface::Surface;
 use specs::{Component, VecStorage};
 
-#[derive(Component)]
-#[storage(VecStorage)]
-pub struct RenderTarget {
-    pub width: usize,
-    pub height: usize,
-    pub buffer: Vec<u32>,
+use crate::gl::renderer::{SURFACE_FORMAT, UnsafeSurface};
+
+pub struct RenderTarget<'a> {
+    pub surface:UnsafeSurface<'a>,
     pub is_dirty: bool,
 }
 
-impl RenderTarget {
-    pub fn new(width: usize, height: usize) -> RenderTarget {
-        let mut buffer: Vec<u32> = Vec::new();
-        buffer.resize(width * height, 0);
+impl<'a> RenderTarget<'a> {
+    pub fn new(width: usize, height: usize) -> RenderTarget<'a> {
         RenderTarget {
-            width,
-            height,
-            buffer,
+            surface: UnsafeSurface::new( Surface::new(width as u32, height as u32, SURFACE_FORMAT).unwrap() ),
             is_dirty: true,
         }
     }
+}
+
+impl Component for RenderTarget<'static> {
+    type Storage = VecStorage<Self>;
 }

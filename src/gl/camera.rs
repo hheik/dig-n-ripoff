@@ -1,4 +1,4 @@
-use crate::util::Vector2;
+use crate::{util::Vector2};
 
 #[derive(Default)]
 pub struct Camera {

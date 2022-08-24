@@ -1,12 +1,5 @@
 pub use u8 as TexelID;
 
-// use crate::util::Vector2I;
-
-// pub struct TexelPosition {
-//     pub texel: Texel,
-//     pub pos: Vector2I,
-// }
-
 #[derive(Clone, Copy)]
 pub struct Texel {
     pub id: TexelID,

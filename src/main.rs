@@ -1,16 +1,14 @@
 use components::*;
-use gl::camera::Camera;
 use mst::world_gen;
 use specs::{Builder, DispatcherBuilder, World, WorldExt};
 use std::time::Duration;
 use systems::*;
+use gl::{camera::Camera, renderer::UnsafeCanvas};
 use util::{Vector2, Vector2I};
 
 use sdl2::{
     event::Event,
     keyboard::Keycode,
-    render::{Canvas, TextureCreator},
-    video::{Window, WindowContext},
     EventPump, Sdl,
 };
 
@@ -21,17 +19,25 @@ mod systems;
 mod util;
 
 pub fn main() {
+    // Init window
+    let (_, canvas, mut event_pump): (
+        Sdl,
+        UnsafeCanvas,
+        EventPump,
+    ) = gl::renderer::init();
+
+    let camera = Camera {
+        position: Vector2 { x: 0.0, y: 0.0 },
+        scale: 4.0,
+    };
+
     let mut world = World::new();
     world.register::<Transform>();
     world.register::<Chunk>();
     world.register::<RenderTarget>();
 
-    let mut camera = Camera {
-        position: Vector2 { x: 0.0, y: 0.0 },
-        scale: 4.0,
-    };
-
     world.insert(camera);
+    world.insert(canvas);
 
     let now = std::time::SystemTime::now();
     for y in 0..256 / Chunk::SIZE_Y as i32 {
@@ -40,8 +46,8 @@ pub fn main() {
             world
                 .create_entity()
                 .with(Transform::new(Vector2 {
-                    x: x as f32,
-                    y: y as f32,
+                    x: (x * Chunk::SIZE_X as i32) as f32,
+                    y: (y * Chunk::SIZE_Y as i32) as f32,
                 }))
                 .with(chunk)
                 .with(RenderTarget::new(Chunk::SIZE_X, Chunk::SIZE_Y))
@@ -55,15 +61,8 @@ pub fn main() {
 
     let mut dispatcher = DispatcherBuilder::new()
         .with_thread_local(TerrainRender)
+        .with_thread_local(Render)
         .build();
-
-    // Init window
-    let (sdl_context, mut canvas, mut event_pump, texture_creator): (
-        Sdl,
-        Canvas<Window>,
-        EventPump,
-        TextureCreator<WindowContext>,
-    ) = gl::renderer::init();
 
     let mut frame_counter: u64 = 0;
     'running: loop {
@@ -82,8 +81,7 @@ pub fn main() {
         }
 
         dispatcher.dispatch(&world);
-
-        gl::renderer::draw(&mut canvas, &texture_creator);
+        
         ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
     }
 }

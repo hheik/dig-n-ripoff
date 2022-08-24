@@ -110,6 +110,7 @@ version = "0.1.0"
 dependencies = [
  "sdl2",
  "specs",
+ "unsafe-send-sync",
 ]
 
 [[package]]
@@ -382,6 +383,12 @@ name = "unicode-ident"
 version = "1.0.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c4f5b37a154999a8f3f98cc23a628d850e154479cd94decf3414696e12e31aaf"
+
+[[package]]
+name = "unsafe-send-sync"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e1018b747e426bb8078b687813128515800452e6c42a53c80dd0550f5d8c4483"
 
 [[package]]
 name = "version-compare"
