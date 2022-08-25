@@ -1,7 +1,6 @@
-use crate::util::Vector2;
+use crate::components::Transform;
 
 #[derive(Default)]
 pub struct Camera {
-    pub position: Vector2<f32>,
-    pub scale: f32,
+    pub transform: Transform,
 }

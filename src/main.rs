@@ -19,8 +19,7 @@ pub fn main() {
     let (_, canvas, mut event_pump): (Sdl, UnsafeCanvas, EventPump) = gl::renderer::init();
 
     let camera = Camera {
-        position: Vector2 { x: 0.0, y: 0.0 },
-        scale: 4.0,
+        transform: Transform::new(Vector2 { x: 64.0, y: 0.0 }, 0.0, Vector2 { x: 2.0, y: 1.0 }),
     };
 
     let mut world = World::new();
@@ -37,10 +36,14 @@ pub fn main() {
             let chunk = world_gen::gen_chunk(Vector2I { x, y });
             world
                 .create_entity()
-                .with(Transform::new(Vector2 {
-                    x: (x * Chunk::SIZE_X as i32) as f32,
-                    y: (y * Chunk::SIZE_Y as i32) as f32,
-                }))
+                .with(Transform::new(
+                    Vector2 {
+                        x: (x * Chunk::SIZE_X as i32) as f32,
+                        y: (y * Chunk::SIZE_Y as i32) as f32,
+                    },
+                    0.0,
+                    Vector2 { x: 1.0, y: 1.0 },
+                ))
                 .with(chunk)
                 .with(RenderTarget::new(Chunk::SIZE_X, Chunk::SIZE_Y))
                 .build();

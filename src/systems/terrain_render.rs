@@ -35,7 +35,7 @@ impl<'a> System<'a> for TerrainRender {
                 "Entity {}.{} : {} [{}]",
                 entity.id(),
                 entity.gen().id(),
-                transform.position,
+                transform.get_position(),
                 chunk.texels.len()
             );
 

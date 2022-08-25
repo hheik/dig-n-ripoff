@@ -17,7 +17,7 @@ impl<'a> System<'a> for Render {
         Option<Write<'a, UnsafeCanvas>>,
     );
 
-    fn run(&mut self, (transform, render_target, camera, mut canvas): Self::SystemData) {
+    fn run(&mut self, (transform, render_target, camera, canvas): Self::SystemData) {
         println!("*** Running Render ***");
         let mut canvas = match canvas {
             Some(canvas) => canvas,
@@ -26,13 +26,15 @@ impl<'a> System<'a> for Render {
 
         renderer::begin_draw(&mut canvas);
         for (transform, render_target) in (&transform, &render_target).join() {
-            let pos = transform.position.rounded();
+            let pos = transform.get_position();
             let src = render_target.surface.rect();
+            let dst_start = camera.transform.xform_inverse(pos).rounded();
+            let (size_x, size_y) = render_target.surface.rect().size();
             let dst = Rect::new(
-                pos.x * camera.scale.round() as i32,
-                pos.y * camera.scale.round() as i32,
-                64 * camera.scale.round() as u32,
-                64 * camera.scale.round() as u32,
+                dst_start.x,
+                dst_start.y,
+                (size_x as f32 * camera.transform.get_scale().x) as u32, // FIXME: proper transforming
+                (size_y as f32 * camera.transform.get_scale().y) as u32,
             );
             renderer::draw_surface(&mut canvas, &render_target.surface, src, dst)
         }
