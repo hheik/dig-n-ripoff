@@ -1,16 +1,12 @@
 use components::*;
+use gl::{camera::Camera, renderer::UnsafeCanvas};
 use mst::world_gen;
 use specs::{Builder, DispatcherBuilder, World, WorldExt};
 use std::time::Duration;
 use systems::*;
-use gl::{camera::Camera, renderer::UnsafeCanvas};
 use util::{Vector2, Vector2I};
 
-use sdl2::{
-    event::Event,
-    keyboard::Keycode,
-    EventPump, Sdl,
-};
+use sdl2::{event::Event, keyboard::Keycode, EventPump, Sdl};
 
 mod components;
 mod gl;
@@ -20,11 +16,7 @@ mod util;
 
 pub fn main() {
     // Init window
-    let (_, canvas, mut event_pump): (
-        Sdl,
-        UnsafeCanvas,
-        EventPump,
-    ) = gl::renderer::init();
+    let (_, canvas, mut event_pump): (Sdl, UnsafeCanvas, EventPump) = gl::renderer::init();
 
     let camera = Camera {
         position: Vector2 { x: 0.0, y: 0.0 },
@@ -81,7 +73,7 @@ pub fn main() {
         }
 
         dispatcher.dispatch(&world);
-        
+
         ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
     }
 }

@@ -1,5 +1,9 @@
 use crate::{
-    components::{RenderTarget, Transform}, gl::{camera::Camera, renderer::{UnsafeCanvas, self}}
+    components::{RenderTarget, Transform},
+    gl::{
+        camera::Camera,
+        renderer::{self, UnsafeCanvas},
+    },
 };
 use sdl2::rect::Rect;
 use specs::{Join, Read, ReadStorage, System, Write};
@@ -24,13 +28,13 @@ impl<'a> System<'a> for Render {
         for (transform, render_target) in (&transform, &render_target).join() {
             let pos = transform.position.rounded();
             let src = render_target.surface.rect();
-            let dst = Rect::new(pos.x * camera.scale.round() as i32, pos.y * camera.scale.round() as i32, 64 * camera.scale.round() as u32, 64 * camera.scale.round() as u32);
-            renderer::draw_surface(
-                &mut canvas,
-                &render_target.surface,
-                src,
-                dst
-            )
+            let dst = Rect::new(
+                pos.x * camera.scale.round() as i32,
+                pos.y * camera.scale.round() as i32,
+                64 * camera.scale.round() as u32,
+                64 * camera.scale.round() as u32,
+            );
+            renderer::draw_surface(&mut canvas, &render_target.surface, src, dst)
         }
         renderer::finish_draw(&mut canvas);
     }
