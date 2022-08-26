@@ -1,5 +1,5 @@
 use core::ops;
-use std::fmt::Display;
+use std::{fmt::Display, f32::consts::PI};
 
 use specs::{Component, VecStorage};
 
@@ -16,22 +16,36 @@ pub struct Transform {
 
 impl Transform {
     pub const IDENTITY: Transform = Transform {
-        matrix: [1.0, 0.0, 0.0, 1.0, 0.0, 0.0],
+        matrix: [
+            1.0, 0.0,
+            0.0, 1.0,
+            0.0, 0.0
+        ],
         is_x_flipped: false,
         is_y_flipped: false,
     };
 
     pub fn new(position: Vector2F, rotation: f32, scale: Vector2F) -> Transform {
-        let mut transform = Transform::IDENTITY;
+        let mut transform = Self::IDENTITY;
         transform.set_position(position);
         transform.set_rotation(rotation);
         transform.set_scale(scale);
-        println!("{}", transform);
         transform
     }
 
     pub fn inverse(&self) -> Transform {
-        // NOTIMP
+        Transform {
+            matrix: [
+                self.matrix[3],
+                -self.matrix[1],
+                -self.matrix[2],
+                self.matrix[0],
+                -self.matrix[4],
+                -self.matrix[5]
+            ],
+            is_x_flipped: false,
+            is_y_flipped: false,
+        }
     }
 
     pub fn get_position(&self) -> Vector2F {
@@ -43,7 +57,12 @@ impl Transform {
     }
 
     pub fn get_rotation(&self) -> f32 {
-        self.get_x_column().angle() * if self.is_x_flipped { -1.0 } else { 1.0 }
+        let rotation = self.get_x_column().angle() + if self.is_x_flipped { PI } else { 0.0 };
+        if rotation < 0.0 {
+            PI * 2.0 + rotation
+        } else {
+            rotation
+        }
     }
 
     pub fn set_rotation(&mut self, value: f32) {
@@ -91,6 +110,27 @@ impl Transform {
         self.is_y_flipped = value.y.is_sign_negative();
     }
 
+    /// Return a clone of transform with updated position
+    pub fn with_position(&self, value: Vector2F) -> Transform {
+        let mut new = self.clone();
+        new.set_position(value);
+        new
+    }
+
+    /// Return a clone of transform with updated rotation
+    pub fn with_rotation(&self, value: f32) -> Transform {
+        let mut new = self.clone();
+        new.set_rotation(value);
+        new
+    }
+
+    /// Return a clone of transform with updated scale
+    pub fn with_scale(&self, value: Vector2F) -> Transform {
+        let mut new = self.clone();
+        new.set_scale(value);
+        new
+    }
+
     /// Transform point from local space to global space (assuming transform is global)
     pub fn xform(&self, point: Vector2F) -> Vector2F {
         self.get_position() + (self.get_x_column() * point.x) + (self.get_y_column() * point.y)
@@ -98,7 +138,7 @@ impl Transform {
 
     /// Transform point from global space to local space (assuming transform is global)
     pub fn xform_inverse(&self, point: Vector2F) -> Vector2F {
-        self.get_position() + (self.get_x_column() * point.x) + (self.get_y_column() * point.y)
+        self.inverse().xform(point)
     }
 
     fn get_x_column(&self) -> Vector2F {
@@ -140,17 +180,25 @@ impl Transform {
 
 impl Display for Transform {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "{:?} flips: {}, {}",
-            self.matrix, self.is_x_flipped, self.is_y_flipped
-        )
+        write!(f, "{} {} {}", self.get_position(), self.get_rotation().to_degrees(), self.get_scale())
     }
 }
 
 impl ops::Mul<Transform> for Transform {
     type Output = Transform;
     fn mul(self, rhs: Transform) -> Self::Output {
-        // NOTIMP
+        let origin = self.xform(rhs.get_position());
+        Transform {
+            matrix: [
+                self.matrix[0] * rhs.matrix[0] + self.matrix[2] * rhs.matrix[1],
+                self.matrix[1] * rhs.matrix[0] + self.matrix[3] * rhs.matrix[1],
+                self.matrix[0] * rhs.matrix[2] + self.matrix[2] * rhs.matrix[3],
+                self.matrix[1] * rhs.matrix[2] + self.matrix[3] * rhs.matrix[3],
+                origin.x,
+                origin.y
+            ],
+            is_x_flipped: self.is_x_flipped != rhs.is_x_flipped,
+            is_y_flipped: self.is_y_flipped != rhs.is_y_flipped
+        }
     }
 }

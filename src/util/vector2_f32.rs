@@ -3,6 +3,13 @@ use super::{Vector2, Vector2I};
 pub type Vector2F = Vector2<f32>;
 
 impl Vector2F {
+    pub const ZERO: Vector2F = Vector2F { x: 0.0, y: 0.0 };
+    pub const ONE: Vector2F = Vector2F { x: 1.0, y: 1.0 };
+    pub const UP: Vector2F = Vector2F { x: 0.0, y: -1.0 };
+    pub const DOWN: Vector2F = Vector2F { x: 0.0, y: 1.0 };
+    pub const LEFT: Vector2F = Vector2F { x: -1.0, y: 0.0 };
+    pub const RIGHT: Vector2F = Vector2F { x: 1.0, y: 0.0 };
+
     pub fn rounded(&self) -> Vector2I {
         Vector2I {
             x: self.x.round() as i32,

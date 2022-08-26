@@ -1,8 +1,9 @@
 use components::*;
-use gl::{camera::Camera, renderer::UnsafeCanvas};
+use gl::renderer::UnsafeCanvas;
 use mst::world_gen;
-use specs::{Builder, DispatcherBuilder, World, WorldExt};
-use std::time::Duration;
+use resources::{Time, Camera};
+use specs::{Builder, DispatcherBuilder, World, WorldExt, shred::FetchMut};
+use std::{time::Duration};
 use systems::*;
 use util::{Vector2, Vector2I};
 
@@ -13,20 +14,30 @@ mod gl;
 mod mst;
 mod systems;
 mod util;
+mod resources;
 
 pub fn main() {
-    // Init window
-    let (_, canvas, mut event_pump): (Sdl, UnsafeCanvas, EventPump) = gl::renderer::init();
-
-    let camera = Camera {
-        transform: Transform::new(Vector2 { x: 64.0, y: 0.0 }, 0.0, Vector2 { x: 2.0, y: 1.0 }),
-    };
+    let lifetime = std::time::SystemTime::now();
 
     let mut world = World::new();
     world.register::<Transform>();
     world.register::<Chunk>();
     world.register::<RenderTarget>();
 
+    // Init window
+    let (_, canvas, mut event_pump): (Sdl, UnsafeCanvas, EventPump) = gl::renderer::init();
+
+    let camera = Camera {
+        transform: Transform::new(Vector2 { x: 0.0, y: 0.0 }, 0.0, Vector2 { x: 4.0, y: 4.0 }),
+    };
+
+    let time = Time {
+        delta_time: Duration::new(0, 0),
+        lifetime,
+        frame: 0
+    };
+
+    world.insert(time);
     world.insert(camera);
     world.insert(canvas);
 
@@ -55,14 +66,13 @@ pub fn main() {
     }
 
     let mut dispatcher = DispatcherBuilder::new()
+        .with(CameraControl, "camera_control", &[])
         .with_thread_local(TerrainRender)
         .with_thread_local(Render)
         .build();
-
-    let mut frame_counter: u64 = 0;
+    
     'running: loop {
-        frame_counter = (frame_counter + 1) % u64::MAX;
-        println!("start of frame: {frame_counter}");
+        let now = std::time::SystemTime::now();
 
         for event in event_pump.poll_iter() {
             match event {
@@ -77,6 +87,11 @@ pub fn main() {
 
         dispatcher.dispatch(&world);
 
-        ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
+        let mut time: FetchMut<Time> = world.fetch_mut();
+        time.frame = (time.frame + 1) % u64::MAX;
+        time.delta_time = match now.elapsed() {
+            Ok(elapsed) => elapsed,
+            Err(error) => panic!("Delta timer error: {:?}", error),
+        }
     }
 }
