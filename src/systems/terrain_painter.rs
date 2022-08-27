@@ -1,8 +1,8 @@
 use crate::{
-    mst::chunk::Chunk,
+    mst::{chunk::Chunk, texel::Texel, utils::index_to_global},
     resources::{Terrain, Time},
+    util::Vector2I,
 };
-use rand::{seq::SliceRandom, thread_rng, Rng};
 use specs::{Read, System, Write};
 
 pub struct TerrainPainter;
@@ -10,33 +10,45 @@ impl<'a> System<'a> for TerrainPainter {
     type SystemData = (Read<'a, Time>, Write<'a, Terrain>);
 
     fn run(&mut self, (time, mut terrain): Self::SystemData) {
-        if time.lifetime.elapsed().unwrap().as_secs() < 1 {
-            return;
-        }
-        for (position_index, chunk) in terrain.chunk_iter_mut() {
-            for i in 0..chunk.texels.len() {
-                let rng: f64 = thread_rng().gen();
-                if rng < 0.05
-                    && chunk.texels[i].is_empty()
-                    && i >= Chunk::SIZE_X
-                    && i < (chunk.texels.len() - Chunk::SIZE_X)
-                    && i % Chunk::SIZE_X != 0
-                    && i % Chunk::SIZE_X != Chunk::SIZE_X - 1
-                    && (chunk.texels[i - Chunk::SIZE_X].id == 2
-                        || chunk.texels[i + Chunk::SIZE_X].id == 2
-                        || chunk.texels[i - 1].id == 2
-                        || chunk.texels[i + 1].id == 2)
-                {
-                    let mut indices: [usize; 4] =
-                        [i - 1, i + 1, i - Chunk::SIZE_X, i + Chunk::SIZE_X];
-                    indices.shuffle(&mut thread_rng());
-                    for neighbour in indices.iter() {
-                        if !chunk.texels[*neighbour].is_empty() {
-                            chunk.texels[i].id = chunk.texels[*neighbour].id;
-                            break;
-                        }
+        let mut updates: Vec<(Vector2I, Texel)> = Vec::new();
+        for (index, chunk) in terrain.chunk_iter() {
+            for i in 0..chunk.texels.len() as i32 {
+                let local = Vector2I {
+                    x: i % Chunk::SIZE.x,
+                    y: i / Chunk::SIZE.y,
+                };
+                let global = index_to_global(index) + local;
+                // rng gen from crate rand was super slow, but even this is quite slow
+                let rng = (time.lifetime.elapsed().unwrap().as_millis()
+                    % (time.frame + 1000) as u128)
+                    + (global.x * global.x + (global.y * 387)) as u128;
+                if rng % 1000 < 5
+                    && match terrain.global_to_texel(&global) {
+                        Some(texel) => texel.is_empty(),
+                        None => false,
                     }
+                    && (match terrain.global_to_texel(&(global + Vector2I::UP)) {
+                        Some(texel) => texel.id == 2,
+                        None => false,
+                    } || match terrain.global_to_texel(&(global + Vector2I::DOWN)) {
+                        Some(texel) => texel.id == 2,
+                        None => false,
+                    } || match terrain.global_to_texel(&(global + Vector2I::LEFT)) {
+                        Some(texel) => texel.id == 2,
+                        None => false,
+                    } || match terrain.global_to_texel(&(global + Vector2I::RIGHT)) {
+                        Some(texel) => texel.id == 2,
+                        None => false,
+                    })
+                {
+                    updates.push((global.to_owned(), Texel { id: 2 }));
                 }
+            }
+        }
+        loop {
+            match updates.pop() {
+                Some((global, texel)) => terrain.set_texel(&global, texel),
+                None => break,
             }
         }
     }

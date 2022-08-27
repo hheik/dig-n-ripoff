@@ -32,6 +32,9 @@ impl<'a> System<'a> for TerrainRender {
                 Some(chunk) => chunk,
                 None => continue,
             };
+            if !chunk.is_dirty {
+                continue;
+            }
             render_target.surface.with_lock_mut(|p_data| {
                 assert!(p_data.len() == chunk.texels.len() * SURFACE_FORMAT_BPP);
                 // FIXME: This doesn't care about bytes_per_pixel

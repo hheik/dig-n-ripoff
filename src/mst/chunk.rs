@@ -32,6 +32,10 @@ impl Chunk {
     }
 
     pub fn set_texel(&mut self, position: &Vector2I, value: Texel) {
-        self.texels[position.y as usize * Chunk::SIZE_X + position.x as usize] = value;
+        let i = position.y as usize * Chunk::SIZE_X + position.x as usize;
+        if self.texels[i].id != value.id {
+            self.is_dirty = true;
+        }
+        self.texels[i] = value;
     }
 }

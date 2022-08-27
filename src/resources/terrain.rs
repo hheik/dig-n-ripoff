@@ -49,7 +49,14 @@ impl Terrain {
         self.index_to_chunk_mut(&global_to_index(global))
     }
 
-    pub fn get_texel(&self, global: &Vector2I) -> Option<Texel> {
+    pub fn global_to_texel(&self, global: &Vector2I) -> Option<Texel> {
+        match self.global_to_chunk(global) {
+            Some(chunk) => Some(chunk.get_texel(&global_to_local(global))),
+            None => None,
+        }
+    }
+
+    pub fn global_to_texel_mut(&mut self, global: &Vector2I) -> Option<Texel> {
         match self.global_to_chunk(global) {
             Some(chunk) => Some(chunk.get_texel(&global_to_local(global))),
             None => None,
@@ -58,7 +65,7 @@ impl Terrain {
 
     pub fn set_texel(&mut self, global: &Vector2I, value: Texel) {
         match self.global_to_chunk_mut(global) {
-            Some(chunk) => chunk.set_texel(global, value),
+            Some(chunk) => chunk.set_texel(&global_to_local(global), value),
             None => {}
         }
     }

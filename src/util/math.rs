@@ -12,3 +12,14 @@ pub fn wrapping_quotient(dividend: i32, divisor: i32) -> i32 {
         res
     }
 }
+
+/// Calculate remainder, but take into account negative values so that they continue the cycle seamlessly.
+/// e.g. (0, 4) -> 0, (-4, 4) -> 0, (-5, 4) -> 3
+pub fn wrapping_remainder(dividend: i32, divisor: i32) -> i32 {
+    let res = dividend % divisor;
+    if dividend < 0 {
+        divisor + res
+    } else {
+        res
+    }
+}

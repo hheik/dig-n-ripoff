@@ -49,8 +49,9 @@ pub fn main() {
     world.insert(camera);
 
     let mut dispatcher = DispatcherBuilder::new()
-        // .with(CameraControl, "camera_control", &[])
         .with(TerrainPainter, "terrain_painter", &[])
+        .with(TerrainSync::new(), "terrain_sync", &[])
+        // .with(CameraControl, "camera_control", &[])
         .with_thread_local(TerrainRender)
         .with_thread_local(Render)
         .build();
@@ -70,11 +71,21 @@ pub fn main() {
         }
 
         dispatcher.dispatch(&world);
+        world.maintain();
+        {
+            let mut terrain: FetchMut<Terrain> = world.fetch_mut();
+            for (_, chunk) in terrain.chunk_iter_mut() {
+                chunk.is_dirty = false;
+            }
+        }
 
         let mut time: FetchMut<Time> = world.fetch_mut();
         time.frame = (time.frame + 1) % u64::MAX;
         time.delta_time = match now.elapsed() {
-            Ok(elapsed) => elapsed,
+            Ok(elapsed) => {
+                println!("fps: {}", (1.0 / elapsed.as_secs_f32()).round() as i32);
+                elapsed
+            }
             Err(error) => panic!("Delta timer error: {:?}", error),
         }
     }
