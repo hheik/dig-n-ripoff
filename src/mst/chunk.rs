@@ -4,13 +4,17 @@ use specs::{Component, DenseVecStorage};
 #[derive(Component)]
 #[storage(DenseVecStorage)]
 pub struct Chunk {
-    pub texels: [Texel; (Self::SIZE_X * Self::SIZE_Y) as usize],
+    pub texels: Box<[Texel; (Self::SIZE_X * Self::SIZE_Y) as usize]>,
     pub is_dirty: bool,
 }
 
 impl Chunk {
     pub const SIZE_X: usize = 64;
     pub const SIZE_Y: usize = 64;
+    pub const SIZE: Vector2I = Vector2I {
+        x: Self::SIZE_X as i32,
+        y: Self::SIZE_Y as i32,
+    };
 
     pub fn new() -> Chunk {
         Chunk {
@@ -19,15 +23,15 @@ impl Chunk {
         }
     }
 
-    pub fn new_texel_array() -> [Texel; Self::SIZE_X * Self::SIZE_Y] {
-        [Texel::empty(); Self::SIZE_X * Self::SIZE_Y]
+    pub fn new_texel_array() -> Box<[Texel; Self::SIZE_X * Self::SIZE_Y]> {
+        Box::new([Texel::EMPTY; Self::SIZE_X * Self::SIZE_Y])
     }
 
-    pub fn get_texel(&self, position: Vector2I) -> Texel {
+    pub fn get_texel(&self, position: &Vector2I) -> Texel {
         self.texels[position.y as usize * Chunk::SIZE_X + position.x as usize]
     }
 
-    pub fn set_texel(&mut self, position: Vector2I, value: Texel) {
+    pub fn set_texel(&mut self, position: &Vector2I, value: Texel) {
         self.texels[position.y as usize * Chunk::SIZE_X + position.x as usize] = value;
     }
 }

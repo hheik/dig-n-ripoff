@@ -1,11 +1,10 @@
 use components::*;
 use gl::renderer::UnsafeCanvas;
-use mst::world_gen;
-use resources::{Camera, Time};
-use specs::{shred::FetchMut, Builder, DispatcherBuilder, World, WorldExt};
+use resources::{Camera, Terrain, Time};
+use specs::{shred::FetchMut, DispatcherBuilder, World, WorldExt};
 use std::time::Duration;
 use systems::*;
-use util::{Vector2, Vector2I};
+use util::Vector2;
 
 use sdl2::{event::Event, keyboard::Keycode, EventPump, Sdl};
 
@@ -21,14 +20,17 @@ pub fn main() {
 
     let mut world = World::new();
     world.register::<Transform>();
-    world.register::<Chunk>();
+    world.register::<ChunkIndex>();
     world.register::<RenderTarget>();
 
     // Init window
     let (_, canvas, mut event_pump): (Sdl, UnsafeCanvas, EventPump) = gl::renderer::init();
 
-    let camera = Camera {
-        transform: Transform::new(Vector2 { x: 0.0, y: 0.0 }, 0.0, Vector2 { x: 4.0, y: 4.0 }),
+    let now = std::time::SystemTime::now();
+    let terrain = Terrain::new();
+    match now.elapsed() {
+        Ok(elapsed) => println!("Creating chunks from image took {}ms", elapsed.as_millis()),
+        Err(error) => println!("Timer error: {:?}", error),
     };
 
     let time = Time {
@@ -37,33 +39,14 @@ pub fn main() {
         frame: 0,
     };
 
+    let camera = Camera {
+        transform: Transform::new(Vector2 { x: 0.0, y: 0.0 }, 0.0, Vector2 { x: 4.0, y: 4.0 }),
+    };
+
+    world.insert(terrain);
+    world.insert(canvas);
     world.insert(time);
     world.insert(camera);
-    world.insert(canvas);
-
-    let now = std::time::SystemTime::now();
-    for y in 0..256 / Chunk::SIZE_Y as i32 {
-        for x in 0..256 / Chunk::SIZE_X as i32 {
-            let chunk = world_gen::gen_chunk(Vector2I { x, y });
-            world
-                .create_entity()
-                .with(Transform::new(
-                    Vector2 {
-                        x: (x * Chunk::SIZE_X as i32) as f32,
-                        y: (y * Chunk::SIZE_Y as i32) as f32,
-                    },
-                    0.0,
-                    Vector2 { x: 1.0, y: 1.0 },
-                ))
-                .with(chunk)
-                .with(RenderTarget::new(Chunk::SIZE_X, Chunk::SIZE_Y))
-                .build();
-        }
-    }
-    match now.elapsed() {
-        Ok(elapsed) => println!("Creating chunks from image took {}ms", elapsed.as_millis()),
-        Err(error) => println!("Timer error: {:?}", error),
-    }
 
     let mut dispatcher = DispatcherBuilder::new()
         // .with(CameraControl, "camera_control", &[])

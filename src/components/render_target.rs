@@ -9,11 +9,9 @@ pub struct RenderTarget<'a> {
 }
 
 impl<'a> RenderTarget<'a> {
-    pub fn new(width: usize, height: usize) -> RenderTarget<'a> {
+    pub fn new(width: u32, height: u32) -> RenderTarget<'a> {
         RenderTarget {
-            surface: UnsafeSurface::new(
-                Surface::new(width as u32, height as u32, SURFACE_FORMAT).unwrap(),
-            ),
+            surface: UnsafeSurface::new(Surface::new(width, height, SURFACE_FORMAT).unwrap()),
             is_dirty: true,
         }
     }

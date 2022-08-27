@@ -1,16 +1,19 @@
-use crate::{components::Chunk, resources::Time, util::chunk_storage::ChunkWriteStorage};
+use crate::{
+    mst::chunk::Chunk,
+    resources::{Terrain, Time},
+};
 use rand::{seq::SliceRandom, thread_rng, Rng};
-use specs::{Read, System};
+use specs::{Read, System, Write};
 
 pub struct TerrainPainter;
 impl<'a> System<'a> for TerrainPainter {
-    type SystemData = (Read<'a, Time>, ChunkWriteStorage<'a>);
+    type SystemData = (Read<'a, Time>, Write<'a, Terrain>);
 
-    fn run(&mut self, (time, mut chunk): Self::SystemData) {
+    fn run(&mut self, (time, mut terrain): Self::SystemData) {
         if time.lifetime.elapsed().unwrap().as_secs() < 1 {
             return;
         }
-        for (chunk, transform) in (&mut chunk).join() {
+        for (position_index, chunk) in terrain.chunk_iter_mut() {
             for i in 0..chunk.texels.len() {
                 let rng: f64 = thread_rng().gen();
                 if rng < 0.05
@@ -35,27 +38,6 @@ impl<'a> System<'a> for TerrainPainter {
                     }
                 }
             }
-            // for i in 0..chunk.texels.len() {
-            //     let pos = Vector2I {
-            //         x: (i % Chunk::SIZE_X) as i32,
-            //         y: (i / Chunk::SIZE_X) as i32,
-            //     } + ChunkWriteStorage::global_to_chunk_index(
-            //         transform.get_position().rounded(),
-            //     );
-            //     let rng: f64 = thread_rng().gen();
-            //     if rng < 0.05
-            //         && ((data.get_texel(pos + Vector2I::UP).is_some()
-            //             && data.get_texel(pos + Vector2I::UP).unwrap().id == 2)
-            //             || (data.get_texel(pos + Vector2I::DOWN).is_some()
-            //                 && data.get_texel(pos + Vector2I::DOWN).unwrap().id == 2)
-            //             || (data.get_texel(pos + Vector2I::LEFT).is_some()
-            //                 && data.get_texel(pos + Vector2I::LEFT).unwrap().id == 2)
-            //             || (data.get_texel(pos + Vector2I::RIGHT).is_some()
-            //                 && data.get_texel(pos + Vector2I::RIGHT).unwrap().id == 2))
-            //     {
-            //         data.set_texel(pos, Texel { id: 2 });
-            //     }
-            // }
         }
     }
 }

@@ -1,21 +1,23 @@
 use std::collections::HashMap;
 
 use crate::{
-    components::{Chunk, RenderTarget},
+    components::{ChunkIndex, RenderTarget},
     gl::renderer::SURFACE_FORMAT_BPP,
     mst::texel::TexelID,
+    resources::Terrain,
 };
 use sdl2::pixels::Color;
-use specs::{Join, ReadStorage, System, WriteStorage};
+use specs::{Join, Read, ReadStorage, System, WriteStorage};
 
 pub struct TerrainRender;
 impl<'a> System<'a> for TerrainRender {
     type SystemData = (
-        ReadStorage<'a, Chunk>,
+        ReadStorage<'a, ChunkIndex>,
         WriteStorage<'a, RenderTarget<'static>>,
+        Read<'a, Terrain>,
     );
 
-    fn run(&mut self, (chunk, mut render_target): Self::SystemData) {
+    fn run(&mut self, (chunk, mut render_target, terrain): Self::SystemData) {
         let color_map: HashMap<TexelID, (u8, u8, u8, u8)> = [
             (0, Color::RGBA(0, 0, 0, 0).rgba()),
             (1, Color::RGBA(158, 127, 99, 255).rgba()),
@@ -26,6 +28,10 @@ impl<'a> System<'a> for TerrainRender {
         .collect();
 
         for (chunk, render_target) in (&chunk, &mut render_target).join() {
+            let chunk = match terrain.index_to_chunk(&chunk.index) {
+                Some(chunk) => chunk,
+                None => continue,
+            };
             render_target.surface.with_lock_mut(|p_data| {
                 assert!(p_data.len() == chunk.texels.len() * SURFACE_FORMAT_BPP);
                 // FIXME: This doesn't care about bytes_per_pixel

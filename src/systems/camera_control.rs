@@ -2,7 +2,7 @@ use std::f32::consts::PI;
 
 use crate::{
     resources::{Camera, Time},
-    util::{math::Mathf32, Vector2F},
+    util::{math::lerp, Vector2F},
 };
 use specs::{Read, System, Write};
 
@@ -14,10 +14,8 @@ impl<'a> System<'a> for CameraControl {
         camera.transform.set_position(-Vector2F::ONE * 0.0);
         let lifetime = time.lifetime.elapsed().unwrap().as_secs_f32();
 
-        // let t = (lifetime).sin() * 0.5 + 0.5;
-        // camera
-        //     .transform
-        //     .set_rotation(Mathf32::lerp(PI / 8.0, -PI / 8.0, t));
+        let t = (lifetime).sin() * 0.5 + 0.5;
+        camera.transform.set_rotation(lerp(PI / 8.0, -PI / 8.0, t));
 
         camera.transform.set_scale(Vector2F {
             x: (lifetime.sin() * 0.5 + 0.5) * 4.0,

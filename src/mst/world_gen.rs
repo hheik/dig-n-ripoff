@@ -1,10 +1,10 @@
-use super::{texel::Texel, utils::*};
-use crate::{components::Chunk, util::Vector2I};
-use sdl2::{
-    pixels::{self, Color},
-    rect::Rect,
-    surface::Surface,
+use super::{
+    chunk::Chunk,
+    texel::Texel,
+    utils::{global_to_index, global_to_local},
 };
+use crate::util::Vector2I;
+use sdl2::{pixels::Color, surface::Surface};
 use std::collections::HashMap;
 
 const DATA_PATH: &str = "./assets/terrain/complex_terrain.png";
@@ -30,11 +30,13 @@ fn map_closest_color(color: Color, map: &HashMap<Color, Texel>) -> Texel {
     map[closest]
 }
 
-pub fn gen_chunk(position_index: Vector2I) -> Chunk {
+pub fn gen_from_image() -> HashMap<Vector2I, Chunk> {
+    let mut chunk_map: HashMap<Vector2I, Chunk> = HashMap::new();
+
     let color_map: HashMap<Color, Texel> = [
-        (Color::RGB(172, 191, 250), Texel::empty()),
-        (Color::RGB(30, 30, 30), Texel::empty()),
-        (Color::RGB(0, 0, 0), Texel::empty()),
+        (Color::RGB(172, 191, 250), Texel::EMPTY),
+        (Color::RGB(30, 30, 30), Texel::EMPTY),
+        (Color::RGB(0, 0, 0), Texel::EMPTY),
         (Color::RGB(158, 127, 99), Texel { id: 1 }),
         (Color::RGB(70, 142, 71), Texel { id: 2 }),
     ]
@@ -42,44 +44,31 @@ pub fn gen_chunk(position_index: Vector2I) -> Chunk {
     .cloned()
     .collect();
 
-    let start = chunk_index_to_global(&position_index);
-    let size = Vector2I {
-        x: Chunk::SIZE_X as i32,
-        y: Chunk::SIZE_Y as i32,
-    };
-
     let tex_surface = read_image(DATA_PATH);
-    let format = pixels::PixelFormatEnum::RGBA32;
-    let mut chunk_surface = Surface::new(size.x as u32, size.y as u32, format).unwrap();
-    let image_rect = Rect::new(start.x, start.y, size.x as u32, size.y as u32);
 
-    match tex_surface.blit(
-        image_rect,
-        &mut chunk_surface,
-        Rect::new(0, 0, size.x as u32, size.y as u32),
-    ) {
-        Ok(_rect) => _rect,
-        Err(error) => panic!("Error blitting image: {:?}", error),
-    };
-
-    let mut texels = Chunk::new_texel_array();
-    chunk_surface.with_lock(|p_data| {
+    tex_surface.with_lock(|p_data| {
         let mut p_iter = p_data.iter();
-        for y in 0..chunk_surface.height() as usize {
-            for x in 0..chunk_surface.width() as usize {
+        for y in 0..tex_surface.height() as i32 {
+            for x in 0..tex_surface.width() as i32 {
                 let p_color = Color {
                     r: *p_iter.next().unwrap(),
                     g: *p_iter.next().unwrap(),
                     b: *p_iter.next().unwrap(),
                     a: *p_iter.next().unwrap(),
                 };
-                texels[y * Chunk::SIZE_X + x] = map_closest_color(p_color, &color_map);
+                let global = Vector2I { x, y };
+                let local = global_to_local(&global);
+                let index = global_to_index(&global);
+                if !chunk_map.contains_key(&index) {
+                    chunk_map.insert(index, Chunk::new());
+                }
+                match chunk_map.get_mut(&index) {
+                    Some(value) => value.set_texel(&local, map_closest_color(p_color, &color_map)),
+                    None => (),
+                };
             }
         }
     });
 
-    Chunk {
-        texels,
-        is_dirty: false,
-    }
+    chunk_map
 }

@@ -1,3 +1,5 @@
+use std::convert::From;
+
 use super::{Vector2, Vector2I};
 
 pub type Vector2F = Vector2<f32>;
@@ -31,5 +33,14 @@ impl Vector2F {
 
     pub fn normalized(&self) -> Vector2F {
         return *self / self.length();
+    }
+}
+
+impl From<Vector2I> for Vector2F {
+    fn from(v: Vector2I) -> Self {
+        Vector2F {
+            x: v.x as f32,
+            y: v.y as f32,
+        }
     }
 }

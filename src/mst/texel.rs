@@ -6,11 +6,9 @@ pub struct Texel {
 }
 
 impl Texel {
+    pub const EMPTY: Texel = Texel { id: 0 };
+
     pub fn is_empty(&self) -> bool {
         self.id == 0
-    }
-
-    pub fn empty() -> Texel {
-        Texel { id: 0 }
     }
 }
