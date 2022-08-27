@@ -9,6 +9,7 @@ edition = "2021"
 specs = { version = "0.18.0", features = ["specs-derive", "shred-derive"] }
 unsafe-send-sync = "0.1.0"
 rand = "0.8.5"
+box2d-rs = "0.0.3"
 
 [dependencies.sdl2]
 version = "0.35"
