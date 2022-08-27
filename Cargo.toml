@@ -6,8 +6,9 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-specs = { version = "0.18.0", features = ["specs-derive"] }
+specs = { version = "0.18.0", features = ["specs-derive", "shred-derive"] }
 unsafe-send-sync = "0.1.0"
+rand = "0.8.5"
 
 [dependencies.sdl2]
 version = "0.35"

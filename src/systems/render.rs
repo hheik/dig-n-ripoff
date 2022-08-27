@@ -29,10 +29,13 @@ impl<'a> System<'a> for Render {
             let (size_x, size_y) = src.size();
 
             let dst_start = camera.transform.xform_inverse(pos).rounded();
-            let dst_end = camera.transform.xform_inverse( Vector2F {
-                x: pos.x + size_x as f32,
-                y: pos.y + size_y as f32
-            } ).rounded();
+            let dst_end = camera
+                .transform
+                .xform_inverse(Vector2F {
+                    x: pos.x + size_x as f32,
+                    y: pos.y + size_y as f32,
+                })
+                .rounded();
 
             let dst = Rect::new(
                 dst_start.x,

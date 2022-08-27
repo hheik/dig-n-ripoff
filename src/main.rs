@@ -1,9 +1,9 @@
 use components::*;
 use gl::renderer::UnsafeCanvas;
 use mst::world_gen;
-use resources::{Time, Camera};
-use specs::{Builder, DispatcherBuilder, World, WorldExt, shred::FetchMut};
-use std::{time::Duration};
+use resources::{Camera, Time};
+use specs::{shred::FetchMut, Builder, DispatcherBuilder, World, WorldExt};
+use std::time::Duration;
 use systems::*;
 use util::{Vector2, Vector2I};
 
@@ -12,9 +12,9 @@ use sdl2::{event::Event, keyboard::Keycode, EventPump, Sdl};
 mod components;
 mod gl;
 mod mst;
+mod resources;
 mod systems;
 mod util;
-mod resources;
 
 pub fn main() {
     let lifetime = std::time::SystemTime::now();
@@ -34,7 +34,7 @@ pub fn main() {
     let time = Time {
         delta_time: Duration::new(0, 0),
         lifetime,
-        frame: 0
+        frame: 0,
     };
 
     world.insert(time);
@@ -66,11 +66,12 @@ pub fn main() {
     }
 
     let mut dispatcher = DispatcherBuilder::new()
-        .with(CameraControl, "camera_control", &[])
+        // .with(CameraControl, "camera_control", &[])
+        .with(TerrainPainter, "terrain_painter", &[])
         .with_thread_local(TerrainRender)
         .with_thread_local(Render)
         .build();
-    
+
     'running: loop {
         let now = std::time::SystemTime::now();
 

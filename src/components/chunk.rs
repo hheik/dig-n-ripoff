@@ -1,8 +1,8 @@
-use crate::mst::texel::Texel;
-use specs::{Component, VecStorage};
+use crate::{mst::texel::Texel, util::Vector2I};
+use specs::{Component, DenseVecStorage};
 
 #[derive(Component)]
-#[storage(VecStorage)]
+#[storage(DenseVecStorage)]
 pub struct Chunk {
     pub texels: [Texel; (Self::SIZE_X * Self::SIZE_Y) as usize],
     pub is_dirty: bool,
@@ -21,5 +21,13 @@ impl Chunk {
 
     pub fn new_texel_array() -> [Texel; Self::SIZE_X * Self::SIZE_Y] {
         [Texel::empty(); Self::SIZE_X * Self::SIZE_Y]
+    }
+
+    pub fn get_texel(&self, position: Vector2I) -> Texel {
+        self.texels[position.y as usize * Chunk::SIZE_X + position.x as usize]
+    }
+
+    pub fn set_texel(&mut self, position: Vector2I, value: Texel) {
+        self.texels[position.y as usize * Chunk::SIZE_X + position.x as usize] = value;
     }
 }

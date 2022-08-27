@@ -1,6 +1,6 @@
 use sdl2::{
     pixels::{Color, PixelFormatEnum},
-    rect::Rect,
+    rect::{Point, Rect},
     render::Canvas,
     surface::Surface,
     video::Window,
@@ -48,6 +48,27 @@ pub fn draw_surface(canvas: &mut UnsafeCanvas, surface: &UnsafeSurface, src: Rec
         Err(error) => panic!("Failed to create texture from surface: {error:?}"),
     };
     match canvas.copy(&texture, src, dst) {
+        Ok(_) => {}
+        Err(error) => panic!("Failed to draw surface to canvas: {error:?}"),
+    };
+}
+
+pub fn draw_surface_rotated(
+    canvas: &mut UnsafeCanvas,
+    surface: &UnsafeSurface,
+    src: Rect,
+    dst: Rect,
+    angle: f64,
+    pivot: Point,
+    flip_h: bool,
+    flip_v: bool,
+) {
+    let texture_creator = canvas.texture_creator();
+    let texture = match surface.as_texture(&texture_creator) {
+        Ok(texture) => texture,
+        Err(error) => panic!("Failed to create texture from surface: {error:?}"),
+    };
+    match canvas.copy_ex(&texture, src, dst, angle, pivot, flip_h, flip_v) {
         Ok(_) => {}
         Err(error) => panic!("Failed to draw surface to canvas: {error:?}"),
     };
