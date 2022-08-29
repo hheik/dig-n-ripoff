@@ -1,12 +1,11 @@
 use components::*;
 use gl::renderer::UnsafeCanvas;
-use resources::{Camera, Terrain, Time};
+use resources::{Box2D, Camera, Terrain, Time, UnsafeBox2D};
+use sdl2::{event::Event, keyboard::Keycode, EventPump, Sdl};
 use specs::{shred::FetchMut, DispatcherBuilder, World, WorldExt};
 use std::time::Duration;
 use systems::*;
 use util::Vector2;
-
-use sdl2::{event::Event, keyboard::Keycode, EventPump, Sdl};
 
 mod components;
 mod gl;
@@ -43,15 +42,20 @@ pub fn main() {
         transform: Transform::new(Vector2 { x: 0.0, y: 0.0 }, 0.0, Vector2 { x: 4.0, y: 4.0 }),
     };
 
+    let box2d_world = Box2D::new_unsafe();
+
     world.insert(terrain);
-    world.insert(canvas);
     world.insert(time);
     world.insert(camera);
+    world.insert(canvas);
+    world.insert(box2d_world);
 
     let mut dispatcher = DispatcherBuilder::new()
         .with(TerrainPainter, "terrain_painter", &[])
         .with(TerrainSync::new(), "terrain_sync", &[])
+        // .with(CollisionShape2::<f32, BodyPose2<f32>, ()>::new, "coll", &[])
         // .with(CameraControl, "camera_control", &[])
+        .with_thread_local(Box2DPhysics::new(), "box2d_physics", &[])
         .with_thread_local(TerrainRender)
         .with_thread_local(Render)
         .build();

@@ -1,9 +1,11 @@
+mod box2d_physics;
 mod camera_control;
 mod render;
 mod terrain_painter;
 mod terrain_render;
 mod terrain_sync;
 
+pub use box2d_physics::*;
 pub use camera_control::*;
 pub use render::*;
 pub use terrain_painter::*;
