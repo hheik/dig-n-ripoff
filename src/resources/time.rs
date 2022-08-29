@@ -10,7 +10,7 @@ pub struct Time {
 impl Default for Time {
     fn default() -> Self {
         Self {
-            delta_time: Duration::new(0, 1_000_000_000u32 / 60),
+            delta_time: Duration::new(0, 0),
             phys_delta_time: Duration::new(0, 1_000_000_000u32 / 60),
             lifetime: std::time::SystemTime::now(),
             frame: 0,
