@@ -17,19 +17,33 @@ pub type UnsafeSurface<'a> = UnsafeSendSync<Surface<'a>>;
 pub type UnsafeCanvas = UnsafeSendSync<Canvas<Window>>;
 
 pub fn init() -> (Sdl, UnsafeCanvas, EventPump) {
-    let sdl_context = sdl2::init().unwrap();
-    let video_subsystem = sdl_context.video().unwrap();
+    let sdl_context = match sdl2::init() {
+        Ok(context) => context,
+        Err(error) => panic!("Failed to init sdl context: {error:?}"),
+    };
+    let video_subsystem = match sdl_context.video() {
+        Ok(video) => video,
+        Err(error) => panic!("Failed to get sdl video subsystem: {error:?}"),
+    };
 
-    let window = video_subsystem
+    let window = match video_subsystem
         .window("rust-sdl2 demo", INIT_WINDOW_SIZE.0, INIT_WINDOW_SIZE.1)
         .position_centered()
         .build()
-        .unwrap();
+    {
+        Ok(window) => window,
+        Err(error) => panic!("Failed to create window: {error:?}"),
+    };
 
-    let mut canvas = UnsafeCanvas::new(window.into_canvas().build().unwrap());
-    let mut event_pump = sdl_context.event_pump().unwrap();
+    let canvas = match window.into_canvas().build() {
+        Ok(canvas) => UnsafeCanvas::new(canvas),
+        Err(error) => panic!("Failed to create window canvas: {error:?}"),
+    };
 
-    (sdl_context, canvas, event_pump)
+    let event_pump = match sdl_context.event_pump() {
+        Ok(event_pump) => event_pump,
+        Err(error) => panic!("Failed to create event pump: {error:?}"),
+    };
 }
 
 pub fn begin_draw(canvas: &mut UnsafeCanvas) {
