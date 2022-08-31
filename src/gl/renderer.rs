@@ -44,6 +44,8 @@ pub fn init() -> (Sdl, UnsafeCanvas, EventPump) {
         Ok(event_pump) => event_pump,
         Err(error) => panic!("Failed to create event pump: {error:?}"),
     };
+
+    (sdl_context, canvas, event_pump)
 }
 
 pub fn begin_draw(canvas: &mut UnsafeCanvas) {
