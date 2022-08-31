@@ -50,7 +50,11 @@ impl<'a> System<'a> for TerrainSync {
                         &mut chunk_index,
                     )
                     .with(
-                        RenderTarget::new(Chunk::SIZE.x as u32, Chunk::SIZE.y as u32),
+                        RenderTarget::new(
+                            Chunk::SIZE.x as u32,
+                            Chunk::SIZE.y as u32,
+                            Vector2F::ZERO,
+                        ),
                         &mut render_target,
                     )
                     .build();

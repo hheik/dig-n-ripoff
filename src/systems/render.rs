@@ -4,7 +4,7 @@ use crate::{
     resources::Camera,
     util::Vector2F,
 };
-use sdl2::rect::Rect;
+use sdl2::rect::{Point, Rect};
 use specs::{Join, Read, ReadStorage, System, Write};
 
 pub struct Render;
@@ -21,14 +21,20 @@ impl<'a> System<'a> for Render {
             Some(canvas) => canvas,
             None => return,
         };
+        let cam_transform = camera.transform.with_rotation(0.0);
 
         renderer::begin_draw(&mut canvas);
         for (transform, render_target) in (&transform, &render_target).join() {
-            let pos = transform.get_position();
             let src = render_target.surface.rect();
             let (size_x, size_y) = src.size();
+            let pivot_offset = render_target.pivot
+                * Vector2F {
+                    x: size_x as f32,
+                    y: size_y as f32,
+                };
+            let pos = transform.get_position() - pivot_offset;
 
-            let dst_start = camera.transform.xform_inverse(pos).rounded();
+            let dst_start = cam_transform.xform_inverse(pos).rounded();
             let dst_end = camera
                 .transform
                 .xform_inverse(Vector2F {
@@ -43,7 +49,20 @@ impl<'a> System<'a> for Render {
                 (dst_end.x - dst_start.x) as u32,
                 (dst_end.y - dst_start.y) as u32,
             );
-            renderer::draw_surface(&mut canvas, &render_target.surface, src, dst)
+            // renderer::draw_surface(&mut canvas, &render_target.surface, src, dst);
+            renderer::draw_surface_rotated(
+                &mut canvas,
+                &render_target.surface,
+                src,
+                dst,
+                transform.get_rotation() as f64,
+                Point::new(
+                    size_x as i32 * (cam_transform.get_scale().x * render_target.pivot.x) as i32,
+                    size_y as i32 * (cam_transform.get_scale().y * render_target.pivot.y) as i32,
+                ),
+                false,
+                false,
+            );
         }
         renderer::finish_draw(&mut canvas);
     }

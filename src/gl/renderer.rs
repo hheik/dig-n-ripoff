@@ -84,7 +84,15 @@ pub fn draw_surface_rotated(
         Ok(texture) => texture,
         Err(error) => panic!("Failed to create texture from surface: {error:?}"),
     };
-    match canvas.copy_ex(&texture, src, dst, angle, pivot, flip_h, flip_v) {
+    match canvas.copy_ex(
+        &texture,
+        src,
+        dst,
+        angle.to_degrees(),
+        pivot,
+        flip_h,
+        flip_v,
+    ) {
         Ok(_) => {}
         Err(error) => panic!("Failed to draw surface to canvas: {error:?}"),
     };

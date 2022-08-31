@@ -1,3 +1,4 @@
+pub mod box2d;
 pub mod math;
 mod segment2_i32;
 mod vector2;
