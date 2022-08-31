@@ -1,11 +1,12 @@
 use box2d_rs::{
     b2_math::B2vec2,
     b2_world::{B2world, B2worldPtr},
-    b2rs_common::UserDataType,
+    b2rs_common::UserDataType, b2_body::BodyPtr,
 };
 use unsafe_send_sync::UnsafeSendSync;
 
 pub type UnsafeBox2D = UnsafeSendSync<Box2D>;
+pub type UnsafeBody = UnsafeSendSync<BodyPtr<UserData>>;
 
 #[derive(Clone, Copy, Default)]
 pub struct UserData;
@@ -18,7 +19,6 @@ impl UserDataType for UserData {
 pub struct Box2D {
     pub gravity: B2vec2,
     pub world_ptr: B2worldPtr<UserData>,
-    // pub world: B2world<UserData>,
 }
 
 impl Box2D {

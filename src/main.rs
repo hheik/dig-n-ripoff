@@ -55,7 +55,7 @@ pub fn main() {
         .with(TerrainSync::new(), "terrain_sync", &[])
         // .with(CollisionShape2::<f32, BodyPose2<f32>, ()>::new, "coll", &[])
         // .with(CameraControl, "camera_control", &[])
-        .with_thread_local(Box2DPhysics::new(), "box2d_physics", &[])
+        .with_thread_local(Box2DPhysics::new())
         .with_thread_local(TerrainRender)
         .with_thread_local(Render)
         .build();
@@ -87,7 +87,7 @@ pub fn main() {
         time.frame = (time.frame + 1) % u64::MAX;
         time.delta_time = match now.elapsed() {
             Ok(elapsed) => {
-                println!("fps: {}", (1.0 / elapsed.as_secs_f32()).round() as i32);
+                // println!("fps: {}", (1.0 / elapsed.as_secs_f32()).round() as i32);
                 elapsed
             }
             Err(error) => panic!("Delta timer error: {:?}", error),

@@ -1,6 +1,6 @@
-use specs::{System, Write};
+use specs::{System, Write, Read};
 
-use crate::resources::UnsafeBox2D;
+use crate::resources::{UnsafeBox2D, Time};
 
 pub struct Box2DPhysics {}
 
@@ -11,8 +11,9 @@ impl Box2DPhysics {
 }
 
 impl<'a> System<'a> for Box2DPhysics {
-    type SystemData = Write<'a, UnsafeBox2D>;
-    fn run(&mut self, mut box2d: Self::SystemData) {
+    type SystemData = (Write<'a, UnsafeBox2D>, Read<'a, Time>);
+    fn run(&mut self, (mut box2d, time): Self::SystemData) {
+        
         let world = box2d.world_ptr.borrow_mut();
     }
 }
