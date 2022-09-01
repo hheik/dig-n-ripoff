@@ -38,20 +38,14 @@ impl<'a> System<'a> for TerrainSync {
         // Add new chunks
         for (index, chunk) in terrain.chunk_iter() {
             if !self.chunk_set.contains(index) {
-                // if *index == Vector2I::ZERO {
                 let now = std::time::SystemTime::now();
-                marching_square::calculate_collisions(chunk);
-                match now.elapsed() {
-                    Ok(elapsed) => {
-                        println!(
-                            "{}: collision generation took {}ms",
-                            index,
-                            elapsed.as_millis()
-                        )
-                    }
-                    Err(error) => println!("Timer error: {:?}", error),
-                };
-                // }
+                let shapes = marching_square::calculate_collisions(chunk);
+                println!(
+                    "{}: collision generation took {}ms",
+                    index,
+                    now.elapsed().unwrap().as_millis()
+                );
+
                 entities
                     .build_entity()
                     .with(

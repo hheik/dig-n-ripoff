@@ -13,6 +13,10 @@ impl Vector2I {
     pub const DOWN: Vector2I = Vector2I { x: 0, y: 1 };
     pub const LEFT: Vector2I = Vector2I { x: -1, y: 0 };
     pub const RIGHT: Vector2I = Vector2I { x: 1, y: 0 };
+
+    pub fn angle(&self) -> f32 {
+        (self.y as f32).atan2(self.x as f32)
+    }
 }
 
 impl ops::Mul<Rect> for Vector2I {
