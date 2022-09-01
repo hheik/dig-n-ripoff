@@ -1,6 +1,6 @@
 use super::{
     chunk::Chunk,
-    texel::Texel,
+    texel::{Texel, TexelID},
     utils::{global_to_index, global_to_local},
 };
 use crate::util::Vector2I;
@@ -20,7 +20,7 @@ fn color_dist(a: &Color, b: &Color) -> u16 {
     a.r.abs_diff(b.r) as u16 + a.g.abs_diff(b.g) as u16 + a.b.abs_diff(b.b) as u16
 }
 
-fn map_closest_color(color: Color, map: &HashMap<Color, Texel>) -> Texel {
+fn map_closest_color(color: Color, map: &HashMap<Color, TexelID>) -> TexelID {
     let mut closest = map.iter().next().unwrap().0;
     for pair in map.iter() {
         if color_dist(&color, pair.0) < color_dist(&color, closest) {
@@ -33,12 +33,12 @@ fn map_closest_color(color: Color, map: &HashMap<Color, Texel>) -> Texel {
 pub fn gen_from_image() -> HashMap<Vector2I, Chunk> {
     let mut chunk_map: HashMap<Vector2I, Chunk> = HashMap::new();
 
-    let color_map: HashMap<Color, Texel> = [
+    let color_map: HashMap<Color, TexelID> = [
         (Color::RGB(172, 191, 250), Texel::EMPTY),
         (Color::RGB(30, 30, 30), Texel::EMPTY),
         (Color::RGB(0, 0, 0), Texel::EMPTY),
-        (Color::RGB(158, 127, 99), Texel { id: 1 }),
-        (Color::RGB(70, 142, 71), Texel { id: 2 }),
+        (Color::RGB(158, 127, 99), 1),
+        (Color::RGB(70, 142, 71), 2),
     ]
     .iter()
     .cloned()

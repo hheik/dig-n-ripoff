@@ -1,5 +1,5 @@
 use crate::{
-    mst::{chunk::Chunk, texel::Texel, utils::index_to_global},
+    mst::{chunk::Chunk, texel::{TexelID}, utils::index_to_global},
     resources::{Terrain, Time},
     util::Vector2I,
 };
@@ -10,7 +10,7 @@ impl<'a> System<'a> for TerrainPainter {
     type SystemData = (Read<'a, Time>, Write<'a, Terrain>);
 
     fn run(&mut self, (time, mut terrain): Self::SystemData) {
-        let mut updates: Vec<(Vector2I, Texel)> = Vec::new();
+        let mut updates: Vec<(Vector2I, TexelID)> = Vec::new();
         for (index, chunk) in terrain.chunk_iter() {
             for i in 0..chunk.texels.len() as i32 {
                 let local = Vector2I {
@@ -41,13 +41,13 @@ impl<'a> System<'a> for TerrainPainter {
                         None => false,
                     })
                 {
-                    updates.push((global.to_owned(), Texel { id: 2 }));
+                    updates.push((global.to_owned(), 2));
                 }
             }
         }
         loop {
             match updates.pop() {
-                Some((global, texel)) => terrain.set_texel(&global, texel),
+                Some((global, id)) => terrain.set_texel(&global, id),
                 None => break,
             }
         }

@@ -118,6 +118,7 @@ name = "dig-n-ripoff"
 version = "0.1.0"
 dependencies = [
  "box2d-rs",
+ "lazy_static",
  "rand",
  "sdl2",
  "specs",

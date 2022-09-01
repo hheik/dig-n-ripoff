@@ -1,7 +1,7 @@
 use std::collections::HashSet;
 
 use crate::{
-    components::{ChunkIndex, RenderTarget, Transform},
+    components::{ChunkIndex, RenderTarget, Transform, PhysicsBody},
     mst::{chunk::Chunk, utils::index_to_global},
     resources::Terrain,
     util::{Vector2F, Vector2I},
@@ -28,11 +28,12 @@ impl<'a> System<'a> for TerrainSync {
         WriteStorage<'a, Transform>,
         WriteStorage<'a, ChunkIndex>,
         WriteStorage<'a, RenderTarget<'static>>,
+        WriteStorage<'a, PhysicsBody>,
     );
 
     fn run(
         &mut self,
-        (terrain, entities, mut transform, mut chunk_index, mut render_target): Self::SystemData,
+        (terrain, entities, mut transform, mut chunk_index, mut render_target, mut physics_body): Self::SystemData,
     ) {
         // Add new chunks
         for (index, _) in terrain.chunk_iter() {
@@ -57,6 +58,7 @@ impl<'a> System<'a> for TerrainSync {
                         ),
                         &mut render_target,
                     )
+                    // .with(, &mut physics_body)
                     .build();
                 self.chunk_set.insert(index.to_owned());
             }
