@@ -1,9 +1,10 @@
 use super::Vector2I;
 use std::fmt;
 
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Segment2I {
-    from: Vector2I,
-    to: Vector2I,
+    pub from: Vector2I,
+    pub to: Vector2I,
 }
 
 impl fmt::Display for Segment2I {

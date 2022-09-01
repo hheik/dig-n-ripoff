@@ -1,17 +1,14 @@
+use crate::util::Vector2I;
+use lazy_static::lazy_static;
 use std::collections::HashMap;
 
-use lazy_static::lazy_static;
 pub use u8 as TexelID;
 pub use u8 as NeighbourMask;
-
-use crate::util::Vector2I;
-
-use super::chunk::Chunk;
 
 #[derive(Clone, Copy, Default)]
 pub struct Texel {
     pub id: TexelID,
-    /// bitmask of empty/non-empty neighbours, goes clockwise from top (least significant bit first).
+    /// bitmask of empty/non-empty neighbours, see NEIGHBOUR_OFFSET_VECTORS for the order
     pub neighbour_mask: NeighbourMask,
 }
 
@@ -27,27 +24,13 @@ lazy_static! {
 
 impl Texel {
     pub const EMPTY: TexelID = 0;
-    pub const NEIGHBOUR_OFFSET_VECTORS: [Vector2I; 8] = [
-        Vector2I { x: -1, y: -1 },
-        Vector2I { x:  0, y: -1 },
-        Vector2I { x:  1, y: -1 },
-        Vector2I { x: -1, y:  0 },
-        Vector2I { x:  1, y:  0 },
-        Vector2I { x: -1, y:  1 },
-        Vector2I { x:  0, y:  1 },
-        Vector2I { x:  1, y:  1 },
+    pub const NEIGHBOUR_OFFSET_VECTORS: [Vector2I; 4] = [
+        Vector2I { x: 0, y: -1 },
+        Vector2I { x: 1, y: 0 },
+        Vector2I { x: 0, y: 1 },
+        Vector2I { x: -1, y: 0 },
     ];
-    pub const NEIGHBOUR_OFFSET_INDICES: [i32; 8] = [
-        -(Chunk::SIZE_X as i32) - 1,
-        -(Chunk::SIZE_X as i32),
-        -(Chunk::SIZE_X as i32) + 1,
-        -(Chunk::SIZE_X as i32) - 1,
-        -(Chunk::SIZE_X as i32) + 1,
-        -(Chunk::SIZE_X as i32) - 1,
-        -(Chunk::SIZE_X as i32),
-        -(Chunk::SIZE_X as i32) + 1,
-    ];
-    
+
     pub fn is_empty(&self) -> bool {
         self.id == 0
     }

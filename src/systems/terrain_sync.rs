@@ -1,8 +1,8 @@
 use std::collections::HashSet;
 
 use crate::{
-    components::{ChunkIndex, RenderTarget, Transform, PhysicsBody},
-    mst::{chunk::Chunk, utils::index_to_global},
+    components::{ChunkIndex, PhysicsBody, RenderTarget, Transform},
+    mst::{chunk::Chunk, marching_square, utils::index_to_global},
     resources::Terrain,
     util::{Vector2F, Vector2I},
 };
@@ -36,8 +36,22 @@ impl<'a> System<'a> for TerrainSync {
         (terrain, entities, mut transform, mut chunk_index, mut render_target, mut physics_body): Self::SystemData,
     ) {
         // Add new chunks
-        for (index, _) in terrain.chunk_iter() {
+        for (index, chunk) in terrain.chunk_iter() {
             if !self.chunk_set.contains(index) {
+                // if *index == Vector2I::ZERO {
+                let now = std::time::SystemTime::now();
+                marching_square::calculate_collisions(chunk);
+                match now.elapsed() {
+                    Ok(elapsed) => {
+                        println!(
+                            "{}: collision generation took {}ms",
+                            index,
+                            elapsed.as_millis()
+                        )
+                    }
+                    Err(error) => println!("Timer error: {:?}", error),
+                };
+                // }
                 entities
                     .build_entity()
                     .with(

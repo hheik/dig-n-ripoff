@@ -1,4 +1,7 @@
-use crate::{mst::texel::{Texel, TexelID, NEIGHBOUR_INDEX_MAP}, util::{Vector2I, Segment2I}};
+use crate::{
+    mst::texel::{Texel, TexelID, NEIGHBOUR_INDEX_MAP},
+    util::Vector2I,
+};
 use specs::{Component, DenseVecStorage};
 
 #[derive(Component)]
@@ -32,8 +35,12 @@ impl Chunk {
     }
 
     pub fn get_texel_option_mut(&mut self, position: &Vector2I) -> Option<&mut Texel> {
-        if position.x < 0 || position.y < 0 || position.x >= Chunk::SIZE_X as i32 || position.y >= Chunk::SIZE_Y as i32 {
-            return None
+        if position.x < 0
+            || position.y < 0
+            || position.x >= Chunk::SIZE_X as i32
+            || position.y >= Chunk::SIZE_Y as i32
+        {
+            return None;
         }
         Some(&mut self.texels[position.y as usize * Chunk::SIZE_X + position.x as usize])
     }
@@ -43,7 +50,12 @@ impl Chunk {
         if self.texels[i].id != id {
             self.is_dirty = true;
         }
-        let update_neighbours = self.texels[i].is_empty() != (Texel { id, neighbour_mask: 0 }).is_empty();
+        let update_neighbours = self.texels[i].is_empty()
+            != (Texel {
+                id,
+                neighbour_mask: 0,
+            })
+            .is_empty();
         self.texels[i].id = id;
         // Update neighbour mask
         if update_neighbours {
@@ -52,7 +64,8 @@ impl Chunk {
                 match self.get_texel_option_mut(&(*position + offset)) {
                     Some(mut neighbour) => {
                         neighbour.neighbour_mask ^= 1 << NEIGHBOUR_INDEX_MAP[&-offset];
-                    }, None => ()
+                    }
+                    None => (),
                 }
             }
         }

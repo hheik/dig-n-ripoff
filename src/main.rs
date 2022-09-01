@@ -42,42 +42,6 @@ pub fn main() {
     let box2d = Box2D::new_unsafe();
     let box2d_world = box2d.world_ptr.clone();
 
-    // create_box(
-    //     &mut world,
-    //     box2d_world.clone(),
-    //     B2bodyType::B2StaticBody,
-    //     Vector2 {
-    //         x: 128.0 + 43.0,
-    //         y: 256.0,
-    //     },
-    //     PI / 4.0,
-    //     Vector2 { x: 128.0, y: 8.0 },
-    //     (255, 255, 255, 255),
-    // );
-
-    // create_box(
-    //     &mut world,
-    //     box2d_world.clone(),
-    //     B2bodyType::B2StaticBody,
-    //     Vector2 {
-    //         x: 128.0 - 43.0,
-    //         y: 256.0,
-    //     },
-    //     PI / -4.0,
-    //     Vector2 { x: 128.0, y: 8.0 },
-    //     (255, 255, 255, 255),
-    // );
-
-    // create_box(
-    //     &mut world,
-    //     box2d_world.clone(),
-    //     B2bodyType::B2StaticBody,
-    //     Vector2 { x: 128.0, y: 256.0 },
-    //     0.0,
-    //     Vector2 { x: 256.0, y: 8.0 },
-    //     (128, 128, 128, 128),
-    // );
-
     let pyramid_size = 2;
     let center = 128.0;
     let box_size = 12.0;
