@@ -74,8 +74,8 @@ pub fn main() {
 
     let mut dispatcher = DispatcherBuilder::new()
         .with(TerrainPainter, "terrain_painter", &[])
-        .with(TerrainSync::new(), "terrain_sync", &[])
         // .with(CameraControl, "camera_control", &[])
+        .with_thread_local(TerrainSync::new())
         .with_thread_local(Box2DPhysics::new())
         .with_thread_local(TerrainRender)
         .with_thread_local(Render)

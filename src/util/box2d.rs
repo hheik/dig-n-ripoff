@@ -25,6 +25,13 @@ pub fn vector2f_to_b2vec(value: Vector2F) -> B2vec2 {
     }
 }
 
+pub fn create_shape(points: Vec<Vector2F>) -> B2polygonShape {
+    let mut shape = B2polygonShape::default();
+    let points: Vec<B2vec2> = points.iter().map(|p| vector2f_to_b2vec(*p)).collect();
+    shape.set(&points[..]);
+    shape
+}
+
 pub fn create_box(
     specs_world: &mut World,
     box2d_world: B2worldPtr<UserData>,
@@ -67,7 +74,7 @@ pub fn create_box(
         .with(PhysicsBody::new(Box2D::create_body(
             box2d_world.clone(),
             Some(body_type),
-            Some(shape),
+            vec![shape],
             Some(position),
             Some(rotation),
         )))

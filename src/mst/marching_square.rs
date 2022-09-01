@@ -65,7 +65,7 @@ pub fn calculate_collisions(chunk: &Chunk) -> Vec<Vec<Vector2F>> {
                     to: side.to + local,
                 })
                 .collect();
-        } else if chunk.texels[i].is_empty() && edge_mask != 0 {
+        } else if !chunk.texels[i].is_empty() && edge_mask != 0 {
             sides = Vec::with_capacity(Chunk::SIZE_X * 2 + Chunk::SIZE_Y * 2);
             for i in 0..MST_EDGE_CASE_MAP.len() {
                 if edge_mask & (1 << i) != 0 {
@@ -107,40 +107,42 @@ pub fn calculate_collisions(chunk: &Chunk) -> Vec<Vec<Vector2F>> {
             }
 
             // Find connected islands
-            let mut merge_index: Option<usize> = None;
-            'outer: for i in 0..islands.len() {
-                for j in 0..islands.len() {
-                    if i == j {
-                        continue;
-                    }
-                    if islands[i].back().is_some()
-                        && islands[j].front().is_some()
-                        && islands[i].back().unwrap().to == islands[j].front().unwrap().from
-                    {
-                        merge_index = Some(i);
-                        break 'outer;
+            loop {
+                let mut merge_index: Option<usize> = None;
+                'outer: for i in 0..islands.len() {
+                    for j in 0..islands.len() {
+                        if i == j {
+                            continue;
+                        }
+                        if islands[i].back().is_some()
+                            && islands[j].front().is_some()
+                            && islands[i].back().unwrap().to == islands[j].front().unwrap().from
+                        {
+                            merge_index = Some(i);
+                            break 'outer;
+                        }
                     }
                 }
-            }
 
-            // Merge connected islands
-            match merge_index {
-                Some(index) => {
-                    let mut merge_from = islands.swap_remove(index);
-                    match islands.iter_mut().find(|island| match island.front() {
-                        Some(front) => front.from == merge_from.back().unwrap().to,
-                        None => false,
-                    }) {
-                        Some(merge_to) => loop {
-                            match merge_from.pop_front() {
-                                Some(segment) => merge_to.push_front(segment),
-                                None => break,
-                            }
-                        },
-                        None => (),
-                    };
+                // Merge connected islands
+                match merge_index {
+                    Some(index) => {
+                        let mut merge_from = islands.swap_remove(index);
+                        match islands.iter_mut().find(|island| match island.front() {
+                            Some(front) => front.from == merge_from.back().unwrap().to,
+                            None => false,
+                        }) {
+                            Some(merge_to) => loop {
+                                match merge_from.pop_front() {
+                                    Some(segment) => merge_to.push_front(segment),
+                                    None => break,
+                                }
+                            },
+                            None => (),
+                        };
+                    }
+                    None => break,
                 }
-                None => (),
             }
         }
     }
@@ -154,7 +156,10 @@ pub fn calculate_collisions(chunk: &Chunk) -> Vec<Vec<Vector2F>> {
         points.push(Vector2F::from(island.front().unwrap().from));
         let mut current_angle: Option<f32> = None;
         for side in island {
-            if current_angle.is_some() && (current_angle.unwrap() - side.angle()).abs() < 0.1 {
+            if current_angle.is_some()
+                && (current_angle.unwrap() - side.angle()).abs() == 0.0
+                && false
+            {
                 let len = points.len();
                 points[len - 1] = Vector2F::from(side.to)
             } else {

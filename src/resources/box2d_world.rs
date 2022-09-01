@@ -50,7 +50,7 @@ impl Box2D {
     pub fn create_body(
         world: B2worldPtr<UserData>,
         body_type: Option<B2bodyType>,
-        shape: Option<B2polygonShape>,
+        shapes: Vec<B2polygonShape>,
         position: Option<Vector2F>,
         rotation: Option<f32>,
     ) -> UnsafeBody {
@@ -63,23 +63,25 @@ impl Box2D {
         body_def.angle = rotation.unwrap_or(0.0);
         let body_ptr = B2world::create_body(world, &body_def);
 
-        let mut fixture_def: B2fixtureDef<UserData> = B2fixtureDef::default();
-        fixture_def.shape = Some(Rc::new(RefCell::new(shape.unwrap_or_default())));
-        match body_def.body_type {
-            B2bodyType::B2StaticBody => {
-                fixture_def.density = 0.0;
-                fixture_def.friction = 0.3;
+        for shape in shapes {
+            let mut fixture_def: B2fixtureDef<UserData> = B2fixtureDef::default();
+            fixture_def.shape = Some(Rc::new(RefCell::new(shape)));
+            match body_def.body_type {
+                B2bodyType::B2StaticBody => {
+                    fixture_def.density = 0.0;
+                    fixture_def.friction = 0.3;
+                }
+                B2bodyType::B2KinematicBody => {
+                    fixture_def.density = 1.0;
+                    fixture_def.friction = 0.0;
+                }
+                B2bodyType::B2DynamicBody => {
+                    fixture_def.density = 1.0;
+                    fixture_def.density = 0.3;
+                }
             }
-            B2bodyType::B2KinematicBody => {
-                fixture_def.density = 1.0;
-                fixture_def.friction = 0.0;
-            }
-            B2bodyType::B2DynamicBody => {
-                fixture_def.density = 1.0;
-                fixture_def.density = 0.3;
-            }
+            B2body::create_fixture(body_ptr.clone(), &fixture_def);
         }
-        B2body::create_fixture(body_ptr.clone(), &fixture_def);
 
         UnsafeBody::new(body_ptr)
     }

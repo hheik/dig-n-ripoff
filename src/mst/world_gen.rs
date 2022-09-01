@@ -7,7 +7,11 @@ use crate::util::Vector2I;
 use sdl2::{pixels::Color, surface::Surface};
 use std::collections::HashMap;
 
-const DATA_PATH: &str = "./assets/terrain/complex_terrain.png";
+// const DATA_PATH: &str = "./assets/terrain/complex_terrain.png";
+// const DATA_PATH: &str = "./assets/terrain/terrain.png";
+// const DATA_PATH: &str = "./assets/terrain/simple_terrain.png";
+// const DATA_PATH: &str = "./assets/terrain/chunk_0.png";
+const DATA_PATH: &str = "./assets/terrain/chunk_1.png";
 
 fn read_image(path: &str) -> Surface<'static> {
     match sdl2::image::LoadSurface::from_file(path) {

@@ -3,11 +3,12 @@ use std::collections::HashSet;
 use crate::{
     components::{ChunkIndex, PhysicsBody, RenderTarget, Transform},
     mst::{chunk::Chunk, marching_square, utils::index_to_global},
-    resources::Terrain,
-    util::{Vector2F, Vector2I},
+    resources::{Box2D, Terrain, UnsafeBox2D},
+    util::{box2d::create_shape, Vector2F, Vector2I},
 };
 
-use specs::{Entities, Read, System, WriteStorage};
+use box2d_rs::{b2_body::B2bodyType, shapes::b2_polygon_shape::B2polygonShape};
+use specs::{Entities, Read, System, Write, WriteStorage};
 
 pub struct TerrainSync {
     chunk_set: HashSet<Vector2I>,
@@ -23,35 +24,57 @@ impl TerrainSync {
 
 impl<'a> System<'a> for TerrainSync {
     type SystemData = (
-        Read<'a, Terrain>,
         Entities<'a>,
         WriteStorage<'a, Transform>,
         WriteStorage<'a, ChunkIndex>,
         WriteStorage<'a, RenderTarget<'static>>,
         WriteStorage<'a, PhysicsBody>,
+        Read<'a, Terrain>,
+        Read<'a, UnsafeBox2D>,
     );
 
     fn run(
         &mut self,
-        (terrain, entities, mut transform, mut chunk_index, mut render_target, mut physics_body): Self::SystemData,
+        (
+            entities,
+            mut transform,
+            mut chunk_index,
+            mut render_target,
+            mut physics_body,
+            terrain,
+            mut box2d,
+        ): Self::SystemData,
     ) {
         // Add new chunks
         for (index, chunk) in terrain.chunk_iter() {
             if !self.chunk_set.contains(index) {
+                let transform_component =
+                    Transform::new(Vector2F::from(index_to_global(index)), 0.0, Vector2F::ONE);
+
                 let now = std::time::SystemTime::now();
-                let shapes = marching_square::calculate_collisions(chunk);
+                let islands = marching_square::calculate_collisions(chunk);
                 println!(
-                    "{}: collision generation took {}ms",
+                    "{}: collision generation took {}ms {} shapes",
                     index,
-                    now.elapsed().unwrap().as_millis()
+                    now.elapsed().unwrap().as_millis(),
+                    islands.len()
                 );
+                let mut shapes: Vec<B2polygonShape> = Vec::with_capacity(islands.len());
+                for island in islands {
+                    shapes.push(create_shape(island))
+                }
+
+                let body = PhysicsBody::new(Box2D::create_body(
+                    box2d.world_ptr.clone(),
+                    Some(B2bodyType::B2StaticBody),
+                    shapes,
+                    Some(transform_component.get_position()),
+                    Some(transform_component.get_rotation()),
+                ));
 
                 entities
                     .build_entity()
-                    .with(
-                        Transform::new(Vector2F::from(index_to_global(index)), 0.0, Vector2F::ONE),
-                        &mut transform,
-                    )
+                    .with(transform_component, &mut transform)
                     .with(
                         ChunkIndex {
                             index: index.to_owned(),
@@ -66,7 +89,7 @@ impl<'a> System<'a> for TerrainSync {
                         ),
                         &mut render_target,
                     )
-                    // .with(, &mut physics_body)
+                    .with(body, &mut physics_body)
                     .build();
                 self.chunk_set.insert(index.to_owned());
             }
