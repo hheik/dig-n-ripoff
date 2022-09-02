@@ -4,11 +4,11 @@ use crate::{
     components::{ChunkIndex, PhysicsBody, RenderTarget, Transform},
     mst::{chunk::Chunk, marching_square, utils::index_to_global},
     resources::{Box2D, Terrain, UnsafeBox2D},
-    util::{box2d::create_shape, Vector2F, Vector2I},
+    util::{box2d::create_segmented_shape, Vector2F, Vector2I},
 };
 
-use box2d_rs::{b2_body::B2bodyType, shapes::b2_polygon_shape::B2polygonShape};
-use specs::{Entities, Read, System, Write, WriteStorage};
+use box2d_rs::{b2_body::B2bodyType, shapes::b2_chain_shape::B2chainShape};
+use specs::{Entities, Read, System, WriteStorage};
 
 pub struct TerrainSync {
     chunk_set: HashSet<Vector2I>,
@@ -59,14 +59,15 @@ impl<'a> System<'a> for TerrainSync {
                     now.elapsed().unwrap().as_millis(),
                     islands.len()
                 );
-                let mut shapes: Vec<B2polygonShape> = Vec::with_capacity(islands.len());
+                let mut shapes: Vec<B2chainShape> = Vec::with_capacity(islands.len());
                 for island in islands {
-                    shapes.push(create_shape(island))
+                    shapes.push(create_segmented_shape(island))
                 }
 
                 let body = PhysicsBody::new(Box2D::create_body(
                     box2d.world_ptr.clone(),
                     Some(B2bodyType::B2StaticBody),
+                    vec![],
                     shapes,
                     Some(transform_component.get_position()),
                     Some(transform_component.get_rotation()),

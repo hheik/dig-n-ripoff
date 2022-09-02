@@ -1,6 +1,6 @@
 use box2d_rs::{
     b2_body::B2bodyType, b2_math::B2vec2, b2_world::B2worldPtr,
-    shapes::b2_polygon_shape::B2polygonShape,
+    shapes::{b2_polygon_shape::B2polygonShape, b2_chain_shape::B2chainShape}, b2_settings::B2_MAX_POLYGON_VERTICES,
 };
 use specs::{Builder, World, WorldExt};
 
@@ -25,10 +25,26 @@ pub fn vector2f_to_b2vec(value: Vector2F) -> B2vec2 {
     }
 }
 
-pub fn create_shape(points: Vec<Vector2F>) -> B2polygonShape {
-    let mut shape = B2polygonShape::default();
+
+/// <strong>Note: this function is not fully implemented</strong>
+/// 
+/// Only accepts max 8 vertices, and only produces convex shapes.
+pub fn create_solid_shape(points: Vec<Vector2F>) -> Vec<B2polygonShape> {
+    // TODO: handle more than 8 vertices and convex shapes
+    let mut polygons: Vec<B2polygonShape> = Vec::new();
+    {
+        let mut shape = B2polygonShape::default();
+        let points: Vec<B2vec2> = points.iter().map(|p| vector2f_to_b2vec(*p)).collect();
+        shape.set(&points[..]);
+        polygons.push(shape);
+    }
+    polygons
+}
+
+pub fn create_segmented_shape(points: Vec<Vector2F>) -> B2chainShape {
+    let mut shape = B2chainShape::default();
     let points: Vec<B2vec2> = points.iter().map(|p| vector2f_to_b2vec(*p)).collect();
-    shape.set(&points[..]);
+    shape.create_loop(&points[..]);
     shape
 }
 
@@ -75,6 +91,7 @@ pub fn create_box(
             box2d_world.clone(),
             Some(body_type),
             vec![shape],
+            vec![],
             Some(position),
             Some(rotation),
         )))

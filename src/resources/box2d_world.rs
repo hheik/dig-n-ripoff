@@ -6,7 +6,7 @@ use box2d_rs::{
     b2_math::B2vec2,
     b2_world::{B2world, B2worldPtr},
     b2rs_common::UserDataType,
-    shapes::b2_polygon_shape::B2polygonShape,
+    shapes::{b2_polygon_shape::B2polygonShape, b2_chain_shape::B2chainShape},
 };
 use unsafe_send_sync::UnsafeSendSync;
 
@@ -50,7 +50,8 @@ impl Box2D {
     pub fn create_body(
         world: B2worldPtr<UserData>,
         body_type: Option<B2bodyType>,
-        shapes: Vec<B2polygonShape>,
+        solid_shapes: Vec<B2polygonShape>,
+        segmented_shapes: Vec<B2chainShape>,
         position: Option<Vector2F>,
         rotation: Option<f32>,
     ) -> UnsafeBody {
@@ -63,7 +64,27 @@ impl Box2D {
         body_def.angle = rotation.unwrap_or(0.0);
         let body_ptr = B2world::create_body(world, &body_def);
 
-        for shape in shapes {
+        for shape in solid_shapes {
+            let mut fixture_def: B2fixtureDef<UserData> = B2fixtureDef::default();
+            fixture_def.shape = Some(Rc::new(RefCell::new(shape)));
+            match body_def.body_type {
+                B2bodyType::B2StaticBody => {
+                    fixture_def.density = 0.0;
+                    fixture_def.friction = 0.3;
+                }
+                B2bodyType::B2KinematicBody => {
+                    fixture_def.density = 1.0;
+                    fixture_def.friction = 0.0;
+                }
+                B2bodyType::B2DynamicBody => {
+                    fixture_def.density = 1.0;
+                    fixture_def.density = 0.3;
+                }
+            }
+            B2body::create_fixture(body_ptr.clone(), &fixture_def);
+        }
+
+        for shape in segmented_shapes {
             let mut fixture_def: B2fixtureDef<UserData> = B2fixtureDef::default();
             fixture_def.shape = Some(Rc::new(RefCell::new(shape)));
             match body_def.body_type {
