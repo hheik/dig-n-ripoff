@@ -51,8 +51,8 @@ pub fn calculate_collisions(chunk: &Chunk) -> Vec<Vec<Vector2F>> {
         };
 
         let edge_mask: u8 = if local.y == 0 { 1 << 0 } else { 0 }
-            | if local.x == Chunk::SIZE.x { 1 << 1 } else { 0 }
-            | if local.y == Chunk::SIZE.y { 1 << 2 } else { 0 }
+            | if local.x == Chunk::SIZE.x - 1 { 1 << 1 } else { 0 }
+            | if local.y == Chunk::SIZE.y - 1 { 1 << 2 } else { 0 }
             | if local.x == 0 { 1 << 3 } else { 0 };
 
         let mut sides: Vec<Segment2I>;
@@ -133,7 +133,7 @@ pub fn calculate_collisions(chunk: &Chunk) -> Vec<Vec<Vector2F>> {
                             None => false,
                         }) {
                             Some(merge_to) => loop {
-                                match merge_from.pop_front() {
+                                match merge_from.pop_back() {
                                     Some(segment) => merge_to.push_front(segment),
                                     None => break,
                                 }
@@ -156,10 +156,7 @@ pub fn calculate_collisions(chunk: &Chunk) -> Vec<Vec<Vector2F>> {
         points.push(Vector2F::from(island.front().unwrap().from));
         let mut current_angle: Option<f32> = None;
         for side in island {
-            if current_angle.is_some()
-                && (current_angle.unwrap() - side.angle()).abs() == 0.0
-                && false
-            {
+            if current_angle.is_some() && (current_angle.unwrap() - side.angle()).abs() < 0.1 {
                 let len = points.len();
                 points[len - 1] = Vector2F::from(side.to)
             } else {

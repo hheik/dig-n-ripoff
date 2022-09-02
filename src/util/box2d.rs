@@ -1,6 +1,6 @@
 use box2d_rs::{
     b2_body::B2bodyType, b2_math::B2vec2, b2_world::B2worldPtr,
-    shapes::{b2_polygon_shape::B2polygonShape, b2_chain_shape::B2chainShape}, b2_settings::B2_MAX_POLYGON_VERTICES,
+    shapes::{b2_polygon_shape::B2polygonShape, b2_chain_shape::B2chainShape},
 };
 use specs::{Builder, World, WorldExt};
 

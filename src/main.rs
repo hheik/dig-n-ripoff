@@ -2,7 +2,7 @@ use std::f32::consts::PI;
 
 use box2d_rs::b2_body::B2bodyType;
 use components::*;
-use gl::renderer::UnsafeCanvas;
+use gl::renderer::{UnsafeCanvas, self};
 use resources::{Box2D, Camera, Terrain, Time};
 use sdl2::{event::Event, keyboard::Keycode, EventPump, Sdl};
 use specs::{shred::FetchMut, DispatcherBuilder, World, WorldExt};
@@ -42,7 +42,7 @@ pub fn main() {
     let box2d = Box2D::new_unsafe();
     let box2d_world = box2d.world_ptr.clone();
 
-    let pyramid_size = 2;
+    let pyramid_size = 4;
     let center = 128.0;
     let box_size = 12.0;
     let separation = 1.5;
@@ -79,6 +79,7 @@ pub fn main() {
         .with_thread_local(Box2DPhysics::new())
         .with_thread_local(TerrainRender)
         .with_thread_local(Render)
+        .with_thread_local(Box2DVisualizer)
         .build();
 
     'running: loop {
@@ -95,6 +96,11 @@ pub fn main() {
             }
         }
 
+        {
+            let mut canvas: FetchMut<UnsafeCanvas> = world.fetch_mut();
+            renderer::begin_draw(&mut canvas);
+        }
+
         dispatcher.dispatch(&world);
         world.maintain();
         {
@@ -102,6 +108,11 @@ pub fn main() {
             for (_, chunk) in terrain.chunk_iter_mut() {
                 chunk.is_dirty = false;
             }
+        }
+
+        {
+            let mut canvas: FetchMut<UnsafeCanvas> = world.fetch_mut();
+            renderer::finish_draw(&mut canvas);
         }
 
         let mut time: FetchMut<Time> = world.fetch_mut();

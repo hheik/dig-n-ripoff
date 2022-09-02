@@ -23,7 +23,6 @@ impl<'a> System<'a> for Render {
         };
         let cam_transform = camera.transform.with_rotation(0.0);
 
-        renderer::begin_draw(&mut canvas);
         for (transform, render_target) in (&transform, &render_target).join() {
             let src = render_target.surface.rect();
             let (size_x, size_y) = src.size();
@@ -49,7 +48,7 @@ impl<'a> System<'a> for Render {
                 (dst_end.x - dst_start.x) as u32,
                 (dst_end.y - dst_start.y) as u32,
             );
-            // renderer::draw_surface(&mut canvas, &render_target.surface, src, dst);
+            // FIXME: Camera rotation is broken
             renderer::draw_surface_rotated(
                 &mut canvas,
                 &render_target.surface,
@@ -64,6 +63,5 @@ impl<'a> System<'a> for Render {
                 false,
             );
         }
-        renderer::finish_draw(&mut canvas);
     }
 }

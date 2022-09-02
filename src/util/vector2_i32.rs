@@ -2,7 +2,7 @@ use core::ops;
 
 use super::Vector2;
 
-use sdl2::rect::Rect;
+use sdl2::rect::{Rect, Point};
 
 pub type Vector2I = Vector2<i32>;
 
@@ -16,6 +16,12 @@ impl Vector2I {
 
     pub fn angle(&self) -> f32 {
         (self.y as f32).atan2(self.x as f32)
+    }
+}
+
+impl Into<Point> for Vector2I {
+    fn into(self) -> Point {
+        Point::new(self.x, self.y)
     }
 }
 

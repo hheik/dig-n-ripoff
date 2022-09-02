@@ -13,6 +13,8 @@ pub const SURFACE_FORMAT_BPP: usize = 4;
 
 use unsafe_send_sync::UnsafeSendSync;
 
+use crate::util::{Vector2F, Vector2I};
+
 pub type UnsafeSurface<'a> = UnsafeSendSync<Surface<'a>>;
 pub type UnsafeCanvas = UnsafeSendSync<Canvas<Window>>;
 
@@ -96,4 +98,21 @@ pub fn draw_surface_rotated(
         Ok(_) => {}
         Err(error) => panic!("Failed to draw surface to canvas: {error:?}"),
     };
+}
+
+pub fn draw_line_loop(canvas: &mut UnsafeCanvas, points: Vec<Vector2I>, color: Option<(u8, u8, u8, u8)>) {
+    let color = match color {
+        Some(color) => Color::RGBA(color.0, color.1, color.2, color.3),
+        None => Color::RGBA(0, 255, 255, 128)
+    };
+    canvas.set_draw_color(color);
+    let mut p: Vec<Point> = Vec::new();
+    for point in points {
+        p.push(Point::new(point.x, point.y));
+    }
+    match canvas.draw_lines(&p[..]) {
+        Ok(_) => {},
+        Err(error) => panic!("Failed to draw points: {error:?}")
+    };
+    // canvas.draw_lines(&points.iter().map(|p| { Point::new(p.x, p.y) }).collect::<Point>()[..]);
 }
