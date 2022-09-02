@@ -1,5 +1,5 @@
 use crate::{
-    mst::{chunk::Chunk, texel::{TexelID}, utils::index_to_global},
+    mst::{chunk::Chunk, texel::TexelID, utils::index_to_global},
     resources::{Terrain, Time},
     util::Vector2I,
 };

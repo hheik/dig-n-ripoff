@@ -7,6 +7,7 @@ use crate::util::Vector2I;
 use sdl2::{pixels::Color, surface::Surface};
 use std::collections::HashMap;
 
+// const DATA_PATH: &str = "./assets/terrain/noise.png";
 const DATA_PATH: &str = "./assets/terrain/complex_terrain.png";
 // const DATA_PATH: &str = "./assets/terrain/terrain.png";
 // const DATA_PATH: &str = "./assets/terrain/simple_terrain.png";
