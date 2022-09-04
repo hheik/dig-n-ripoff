@@ -3,13 +3,29 @@ use std::collections::HashMap;
 use crate::{
     components::{ChunkIndex, RenderTarget},
     gl::renderer::SURFACE_FORMAT_BPP,
-    mst::texel::TexelID,
+    mst::{
+        chunk::{Chunk, TexelUpdate},
+        texel::TexelID,
+    },
     resources::Terrain,
+    util::Vector2I,
 };
 use sdl2::pixels::Color;
 use specs::{Join, Read, ReadStorage, System, WriteStorage};
 
-pub struct TerrainRender;
+pub struct TerrainRender {
+    /// Map of dirty texels by chunk
+    dirty_texels: HashMap<Vector2I, Vec<TexelUpdate>>,
+}
+
+impl TerrainRender {
+    pub fn new() -> TerrainRender {
+        TerrainRender {
+            dirty_texels: HashMap::new(),
+        }
+    }
+}
+
 impl<'a> System<'a> for TerrainRender {
     type SystemData = (
         ReadStorage<'a, ChunkIndex>,
@@ -32,9 +48,9 @@ impl<'a> System<'a> for TerrainRender {
                 Some(chunk) => chunk,
                 None => continue,
             };
-            if !chunk.is_dirty {
-                continue;
-            }
+            // if !chunk.is_dirty {
+            //     continue;
+            // }
             render_target.surface.with_lock_mut(|p_data| {
                 assert!(p_data.len() == chunk.texels.len() * SURFACE_FORMAT_BPP);
                 // FIXME: This doesn't care about bytes_per_pixel

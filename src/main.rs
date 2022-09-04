@@ -2,7 +2,7 @@ use std::f32::consts::PI;
 
 use box2d_rs::b2_body::B2bodyType;
 use components::*;
-use gl::renderer::{UnsafeCanvas, self};
+use gl::renderer::{self, UnsafeCanvas};
 use resources::{Box2D, Camera, Terrain, Time};
 use sdl2::{event::Event, keyboard::Keycode, EventPump, Sdl};
 use specs::{shred::FetchMut, DispatcherBuilder, World, WorldExt};
@@ -77,7 +77,7 @@ pub fn main() {
         // .with(CameraControl, "camera_control", &[])
         .with_thread_local(TerrainSync::new())
         .with_thread_local(Box2DPhysics::new())
-        .with_thread_local(TerrainRender)
+        .with_thread_local(TerrainRender::new())
         .with_thread_local(Render)
         .with_thread_local(Box2DVisualizer)
         .build();
@@ -103,12 +103,12 @@ pub fn main() {
 
         dispatcher.dispatch(&world);
         world.maintain();
-        {
-            let mut terrain: FetchMut<Terrain> = world.fetch_mut();
-            for (_, chunk) in terrain.chunk_iter_mut() {
-                chunk.is_dirty = false;
-            }
-        }
+        // {
+        //     let mut terrain: FetchMut<Terrain> = world.fetch_mut();
+        //     for (_, chunk) in terrain.chunk_iter_mut() {
+        //         chunk.is_dirty = false;
+        //     }
+        // }
 
         {
             let mut canvas: FetchMut<UnsafeCanvas> = world.fetch_mut();

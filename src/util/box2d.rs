@@ -1,6 +1,8 @@
 use box2d_rs::{
-    b2_body::B2bodyType, b2_math::B2vec2, b2_world::B2worldPtr,
-    shapes::{b2_polygon_shape::B2polygonShape, b2_chain_shape::B2chainShape},
+    b2_body::B2bodyType,
+    b2_math::B2vec2,
+    b2_world::B2worldPtr,
+    shapes::{b2_chain_shape::B2chainShape, b2_polygon_shape::B2polygonShape},
 };
 use specs::{Builder, World, WorldExt};
 
@@ -25,9 +27,8 @@ pub fn vector2f_to_b2vec(value: Vector2F) -> B2vec2 {
     }
 }
 
-
 /// <strong>Note: this function is not fully implemented</strong>
-/// 
+///
 /// Only accepts max 8 vertices, and only produces convex shapes.
 pub fn create_solid_shape(points: Vec<Vector2F>) -> Vec<B2polygonShape> {
     // TODO: handle more than 8 vertices and convex shapes

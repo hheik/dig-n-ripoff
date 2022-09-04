@@ -1,14 +1,20 @@
 use crate::{
     mst::texel::{Texel, TexelID, NEIGHBOUR_INDEX_MAP},
-    util::Vector2I,
+    util::{ChangeBuffer, Vector2I},
 };
 use specs::{Component, DenseVecStorage};
+
+#[derive(Clone, Copy)]
+pub struct TexelUpdate {
+    pub global_position: Vector2I,
+    pub id: TexelID,
+}
 
 #[derive(Component)]
 #[storage(DenseVecStorage)]
 pub struct Chunk {
     pub texels: Box<[Texel; (Self::SIZE_X * Self::SIZE_Y) as usize]>,
-    pub is_dirty: bool,
+    change_buffer: ChangeBuffer<TexelUpdate>,
 }
 
 impl Chunk {
@@ -22,7 +28,7 @@ impl Chunk {
     pub fn new() -> Chunk {
         Chunk {
             texels: Self::new_texel_array(),
-            is_dirty: true,
+            change_buffer: ChangeBuffer::new(),
         }
     }
 
@@ -48,7 +54,7 @@ impl Chunk {
     pub fn set_texel(&mut self, position: &Vector2I, id: TexelID) {
         let i = position.y as usize * Chunk::SIZE_X + position.x as usize;
         if self.texels[i].id != id {
-            self.is_dirty = true;
+            // self.is_dirty = true;
         }
         let update_neighbours = self.texels[i].is_empty()
             != (Texel {
@@ -71,7 +77,14 @@ impl Chunk {
         }
     }
 
-    // pub fn generate_collisions(&self) -> Vec<Segment2I> {
-    //     let mut collisions = Vec<Segment2I>
+    // pub fn add_listener(&mut self, cb: impl Fn(&Vector2I, &TexelID) -> ()) {
+    //     // self.on_change.push(cb);
+    // }
+
+    // pub fn add_listener<F>(&mut self, cb: F)
+    // where
+    //     F: Fn(&Vector2I, &TexelID) -> (),
+    // {
+    //     self.on_change.push(|local, id| cb(&local, &id));
     // }
 }

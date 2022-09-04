@@ -8,7 +8,7 @@ use crate::{
 };
 
 use box2d_rs::{b2_body::B2bodyType, shapes::b2_chain_shape::B2chainShape};
-use specs::{Entities, Read, System, WriteStorage};
+use specs::{Entities, Join, Read, System, WriteStorage};
 
 pub struct TerrainSync {
     chunk_set: HashSet<Vector2I>,
@@ -95,8 +95,11 @@ impl<'a> System<'a> for TerrainSync {
                 self.chunk_set.insert(index.to_owned());
             }
         }
+
         // Remove deleted chunks
         self.chunk_set
-            .retain(|index| terrain.index_to_chunk(index).is_some())
+            .retain(|index| terrain.index_to_chunk(index).is_some());
+
+        for (physics_body, chunk_index) in (&mut physics_body, &chunk_index).join() {}
     }
 }

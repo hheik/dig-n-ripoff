@@ -5,7 +5,7 @@ use std::collections::{
 
 use crate::{
     mst::{
-        chunk::Chunk,
+        chunk::{Chunk, TexelUpdate},
         texel::{Texel, TexelID},
         utils::{global_to_index, global_to_local},
         world_gen::gen_from_image,
@@ -16,13 +16,34 @@ use crate::{
 #[derive(Default)]
 pub struct Terrain {
     chunk_map: HashMap<Vector2I, Chunk>,
+    on_texel_update: ,
 }
 
 impl Terrain {
     pub fn new() -> Terrain {
-        Terrain {
-            chunk_map: gen_from_image(),
+        let mut terrain = Terrain {
+            chunk_map: HashMap::new(),
+            on_texel_update: Vec::new(),
+        };
+        for (index, chunk) in gen_from_image().drain() {
+            terrain.add_chunk(index, chunk);
         }
+        terrain
+    }
+
+    fn on_chunk_update(&self, index: Vector2I, id: TexelID) {}
+
+    pub fn add_chunk(&mut self, index: Vector2I, mut chunk: Chunk) {
+        chunk.add_listener(|index, id| {
+            for update in self.on_texel_update.clone() {
+                println!("something changed: {} -> {}", index, id);
+            }
+        });
+        self.chunk_map.insert(index, chunk);
+    }
+
+    pub fn remove_chunk(&mut self, index: Vector2I) {
+        self.chunk_map.remove(&index);
     }
 
     pub fn chunk_iter(&self) -> Iter<Vector2I, Chunk> {
@@ -69,4 +90,8 @@ impl Terrain {
             None => {}
         }
     }
+
+    // pub fn add_texel_listener(&mut self, cb: TexelUpdate) {
+    //     self.on_texel_update.push(cb);
+    // }
 }
