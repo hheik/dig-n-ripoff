@@ -10,20 +10,37 @@ use crate::{
         utils::{global_to_index, global_to_local},
         world_gen::gen_from_image,
     },
-    util::Vector2I,
+    util::{ChangeBuffer, Listener, Vector2I},
 };
+
+#[derive(Clone)]
+pub enum TerrainUpdate {
+    None,
+    ChunkAdded(Vector2I),
+    ChunkRemoved(Vector2I),
+    TexelsUpdated(Vector2I, Vec<TexelUpdate>),
+}
+
+impl Default for TerrainUpdate {
+    fn default() -> Self {
+        TerrainUpdate::None
+    }
+}
 
 #[derive(Default)]
 pub struct Terrain {
     chunk_map: HashMap<Vector2I, Chunk>,
-    on_texel_update: ,
+    change_buffer: ChangeBuffer<TerrainUpdate>,
+    /// Map a single listener to per-chunk listeners
+    chunk_listener_map: HashMap<Listener, HashMap<Vector2I, Listener>>,
 }
 
 impl Terrain {
     pub fn new() -> Terrain {
         let mut terrain = Terrain {
             chunk_map: HashMap::new(),
-            on_texel_update: Vec::new(),
+            chunk_listener_map: HashMap::new(),
+            change_buffer: ChangeBuffer::new(),
         };
         for (index, chunk) in gen_from_image().drain() {
             terrain.add_chunk(index, chunk);
@@ -31,18 +48,15 @@ impl Terrain {
         terrain
     }
 
-    fn on_chunk_update(&self, index: Vector2I, id: TexelID) {}
-
-    pub fn add_chunk(&mut self, index: Vector2I, mut chunk: Chunk) {
-        chunk.add_listener(|index, id| {
-            for update in self.on_texel_update.clone() {
-                println!("something changed: {} -> {}", index, id);
-            }
-        });
+    pub fn add_chunk(&mut self, index: Vector2I, chunk: Chunk) {
         self.chunk_map.insert(index, chunk);
+        self.change_buffer
+            .push_event(TerrainUpdate::ChunkAdded(index));
     }
 
     pub fn remove_chunk(&mut self, index: Vector2I) {
+        self.change_buffer
+            .push_event(TerrainUpdate::ChunkRemoved(index));
         self.chunk_map.remove(&index);
     }
 
@@ -72,14 +86,14 @@ impl Terrain {
 
     pub fn global_to_texel(&self, global: &Vector2I) -> Option<Texel> {
         match self.global_to_chunk(global) {
-            Some(chunk) => Some(chunk.get_texel(&global_to_local(global))),
+            Some(chunk) => chunk.get_texel(&global_to_local(global)),
             None => None,
         }
     }
 
     pub fn global_to_texel_mut(&mut self, global: &Vector2I) -> Option<Texel> {
         match self.global_to_chunk(global) {
-            Some(chunk) => Some(chunk.get_texel(&global_to_local(global))),
+            Some(chunk) => chunk.get_texel(&global_to_local(global)),
             None => None,
         }
     }
@@ -91,7 +105,40 @@ impl Terrain {
         }
     }
 
-    // pub fn add_texel_listener(&mut self, cb: TexelUpdate) {
-    //     self.on_texel_update.push(cb);
-    // }
+    pub fn get_listener(&mut self) -> Listener {
+        let listener = self.change_buffer.get_listener();
+
+        let mut chunk_listeners: HashMap<Vector2I, Listener> = HashMap::new();
+        for (index, chunk) in self.chunk_map.iter_mut() {
+            chunk_listeners.insert(*index, chunk.change_buffer.get_listener());
+        }
+        self.chunk_listener_map.insert(listener, chunk_listeners);
+
+        listener
+    }
+
+    pub fn consume_changes(&mut self, listener: Listener) -> Option<Vec<TerrainUpdate>> {
+        match self.chunk_listener_map.get(&listener) {
+            Some(listeners) => {
+                for (index, listener) in listeners {
+                    match self.chunk_map.get_mut(index) {
+                        Some(chunk) => match chunk.change_buffer.consume_listener(*listener) {
+                            Some(changes) => {
+                                if changes.len() > 0 {
+                                    self.change_buffer
+                                        .push_event(TerrainUpdate::TexelsUpdated(*index, changes));
+                                }
+                            }
+                            None => (),
+                        },
+                        None => (),
+                    }
+                }
+                self.chunk_listener_map.remove(&listener);
+            }
+            None => (),
+        };
+
+        self.change_buffer.consume_listener(listener)
+    }
 }

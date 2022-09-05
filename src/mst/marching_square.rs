@@ -1,4 +1,4 @@
-use super::chunk::Chunk;
+use super::{chunk::Chunk, utils::texel_index_to_local};
 use crate::util::{Segment2I, Vector2F, Vector2I};
 use lazy_static::lazy_static;
 use std::collections::VecDeque;
@@ -45,14 +45,19 @@ lazy_static! {
 pub fn calculate_collisions(chunk: &Chunk) -> Vec<Vec<Vector2F>> {
     let mut islands: Vec<Island> = Vec::new();
     for i in 0..chunk.texels.len() {
-        let local = Vector2I {
-            x: i as i32 % Chunk::SIZE.x,
-            y: i as i32 / Chunk::SIZE.y,
-        };
+        let local = texel_index_to_local(i);
 
         let edge_mask: u8 = if local.y == 0 { 1 << 0 } else { 0 }
-            | if local.x == Chunk::SIZE.x - 1 { 1 << 1 } else { 0 }
-            | if local.y == Chunk::SIZE.y - 1 { 1 << 2 } else { 0 }
+            | if local.x == Chunk::SIZE.x - 1 {
+                1 << 1
+            } else {
+                0
+            }
+            | if local.y == Chunk::SIZE.y - 1 {
+                1 << 2
+            } else {
+                0
+            }
             | if local.x == 0 { 1 << 3 } else { 0 };
 
         let mut sides: Vec<Segment2I>;

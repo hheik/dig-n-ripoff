@@ -1,5 +1,8 @@
 use crate::{
-    mst::{chunk::Chunk, texel::TexelID, utils::index_to_global},
+    mst::{
+        texel::TexelID,
+        utils::{index_to_global, texel_index_to_local},
+    },
     resources::{Terrain, Time},
     util::Vector2I,
 };
@@ -12,11 +15,8 @@ impl<'a> System<'a> for TerrainPainter {
     fn run(&mut self, (time, mut terrain): Self::SystemData) {
         let mut updates: Vec<(Vector2I, TexelID)> = Vec::new();
         for (index, chunk) in terrain.chunk_iter() {
-            for i in 0..chunk.texels.len() as i32 {
-                let local = Vector2I {
-                    x: i % Chunk::SIZE.x,
-                    y: i / Chunk::SIZE.y,
-                };
+            for i in 0..chunk.texels.len() {
+                let local = texel_index_to_local(i);
                 let global = index_to_global(index) + local;
                 // rng gen from crate rand was super slow, but even this is quite slow
                 let rng = (time.lifetime.elapsed().unwrap().as_millis()

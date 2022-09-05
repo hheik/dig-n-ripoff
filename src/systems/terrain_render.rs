@@ -3,25 +3,21 @@ use std::collections::HashMap;
 use crate::{
     components::{ChunkIndex, RenderTarget},
     gl::renderer::SURFACE_FORMAT_BPP,
-    mst::{
-        chunk::{Chunk, TexelUpdate},
-        texel::TexelID,
-    },
-    resources::Terrain,
-    util::Vector2I,
+    mst::texel::TexelID,
+    resources::{Terrain, TerrainUpdate},
+    util::Listener,
 };
 use sdl2::pixels::Color;
-use specs::{Join, Read, ReadStorage, System, WriteStorage};
+use specs::{Join, ReadStorage, System, Write, WriteStorage};
 
 pub struct TerrainRender {
-    /// Map of dirty texels by chunk
-    dirty_texels: HashMap<Vector2I, Vec<TexelUpdate>>,
+    terrain_listener: Option<Listener>,
 }
 
 impl TerrainRender {
     pub fn new() -> TerrainRender {
         TerrainRender {
-            dirty_texels: HashMap::new(),
+            terrain_listener: None,
         }
     }
 }
@@ -30,10 +26,10 @@ impl<'a> System<'a> for TerrainRender {
     type SystemData = (
         ReadStorage<'a, ChunkIndex>,
         WriteStorage<'a, RenderTarget<'static>>,
-        Read<'a, Terrain>,
+        Write<'a, Terrain>,
     );
 
-    fn run(&mut self, (chunk, mut render_target, terrain): Self::SystemData) {
+    fn run(&mut self, (chunk, mut render_target, mut terrain): Self::SystemData) {
         let color_map: HashMap<TexelID, (u8, u8, u8, u8)> = [
             (0, Color::RGBA(0, 0, 0, 0).rgba()),
             (1, Color::RGBA(158, 127, 99, 255).rgba()),
@@ -43,26 +39,53 @@ impl<'a> System<'a> for TerrainRender {
         .cloned()
         .collect();
 
-        for (chunk, render_target) in (&chunk, &mut render_target).join() {
-            let chunk = match terrain.index_to_chunk(&chunk.index) {
-                Some(chunk) => chunk,
-                None => continue,
-            };
-            // if !chunk.is_dirty {
-            //     continue;
-            // }
-            render_target.surface.with_lock_mut(|p_data| {
-                assert!(p_data.len() == chunk.texels.len() * SURFACE_FORMAT_BPP);
-                // FIXME: This doesn't care about bytes_per_pixel
-                for xy in 0..chunk.texels.len() {
-                    let i = xy * SURFACE_FORMAT_BPP;
-                    let (r, g, b, a) = color_map[&chunk.texels[xy].id];
-                    p_data[i + 0] = r;
-                    p_data[i + 1] = g;
-                    p_data[i + 2] = b;
-                    p_data[i + 3] = a;
+        let events = match self.terrain_listener {
+            Some(listener) => terrain.consume_changes(listener),
+            None => {
+                // Initialize
+                for (chunk, render_target) in (&chunk, &mut render_target).join() {
+                    let chunk = match terrain.index_to_chunk(&chunk.index) {
+                        Some(chunk) => chunk,
+                        None => continue,
+                    };
+                    render_target.surface.with_lock_mut(|p_data| {
+                        assert!(p_data.len() == chunk.texels.len() * SURFACE_FORMAT_BPP);
+                        // FIXME: This doesn't care about bytes_per_pixel
+                        for xy in 0..chunk.texels.len() {
+                            let i = xy * SURFACE_FORMAT_BPP;
+                            let (r, g, b, a) = color_map[&chunk.texels[xy].id];
+                            p_data[i + 0] = r;
+                            p_data[i + 1] = g;
+                            p_data[i + 2] = b;
+                            p_data[i + 3] = a;
+                        }
+                    })
                 }
-            })
-        }
+                None
+            }
+        };
+        match events {
+            Some(events) => {
+                println!("events: {}", events.len());
+                // Handle updates
+                for event in events {
+                    match event {
+                        TerrainUpdate::ChunkAdded(index) => {
+                            println!(" - ChunkAdded: {index}")
+                        }
+                        TerrainUpdate::ChunkRemoved(index) => {
+                            println!(" - ChunkRemoved: {index}")
+                        }
+                        TerrainUpdate::TexelsUpdated(index, changes) => {
+                            println!(" - TexelsUpdated: {index} ({})", changes.len())
+                        }
+                        TerrainUpdate::None => (),
+                    }
+                }
+            }
+            None => (),
+        };
+
+        self.terrain_listener = Some(terrain.get_listener());
     }
 }

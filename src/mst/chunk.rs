@@ -4,9 +4,11 @@ use crate::{
 };
 use specs::{Component, DenseVecStorage};
 
+use super::utils::local_to_texel_index;
+
 #[derive(Clone, Copy)]
 pub struct TexelUpdate {
-    pub global_position: Vector2I,
+    pub position: Vector2I,
     pub id: TexelID,
 }
 
@@ -14,7 +16,7 @@ pub struct TexelUpdate {
 #[storage(DenseVecStorage)]
 pub struct Chunk {
     pub texels: Box<[Texel; (Self::SIZE_X * Self::SIZE_Y) as usize]>,
-    change_buffer: ChangeBuffer<TexelUpdate>,
+    pub change_buffer: ChangeBuffer<TexelUpdate>,
 }
 
 impl Chunk {
@@ -36,25 +38,21 @@ impl Chunk {
         Box::new([Texel::default(); Self::SIZE_X * Self::SIZE_Y])
     }
 
-    pub fn get_texel(&self, position: &Vector2I) -> Texel {
-        self.texels[position.y as usize * Chunk::SIZE_X + position.x as usize]
+    pub fn get_texel(&self, position: &Vector2I) -> Option<Texel> {
+        local_to_texel_index(position).map(|i| self.texels[i])
     }
 
     pub fn get_texel_option_mut(&mut self, position: &Vector2I) -> Option<&mut Texel> {
-        if position.x < 0
-            || position.y < 0
-            || position.x >= Chunk::SIZE_X as i32
-            || position.y >= Chunk::SIZE_Y as i32
-        {
-            return None;
-        }
-        Some(&mut self.texels[position.y as usize * Chunk::SIZE_X + position.x as usize])
+        local_to_texel_index(position).map(|i| &mut self.texels[i])
     }
 
     pub fn set_texel(&mut self, position: &Vector2I, id: TexelID) {
-        let i = position.y as usize * Chunk::SIZE_X + position.x as usize;
+        let i = local_to_texel_index(position).expect("Texel index out of range");
         if self.texels[i].id != id {
-            // self.is_dirty = true;
+            self.change_buffer.push_event(TexelUpdate {
+                position: *position,
+                id,
+            })
         }
         let update_neighbours = self.texels[i].is_empty()
             != (Texel {
@@ -76,15 +74,4 @@ impl Chunk {
             }
         }
     }
-
-    // pub fn add_listener(&mut self, cb: impl Fn(&Vector2I, &TexelID) -> ()) {
-    //     // self.on_change.push(cb);
-    // }
-
-    // pub fn add_listener<F>(&mut self, cb: F)
-    // where
-    //     F: Fn(&Vector2I, &TexelID) -> (),
-    // {
-    //     self.on_change.push(|local, id| cb(&local, &id));
-    // }
 }
