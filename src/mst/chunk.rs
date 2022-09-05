@@ -20,8 +20,8 @@ pub struct Chunk {
 }
 
 impl Chunk {
-    pub const SIZE_X: usize = 64;
-    pub const SIZE_Y: usize = 64;
+    pub const SIZE_X: usize = 32;
+    pub const SIZE_Y: usize = 32;
     pub const SIZE: Vector2I = Vector2I {
         x: Self::SIZE_X as i32,
         y: Self::SIZE_Y as i32,

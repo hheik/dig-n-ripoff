@@ -13,7 +13,7 @@ impl Box2DPhysics {
     pub const TIME_STEP: f32 = 1.0 / 60.0;
     const VELOCITY_ITERATIONS: i32 = 6;
     const POSITION_ITERATIONS: i32 = 2;
-    const MAX_PHYS_STEPS: u16 = 60;
+    const MAX_PHYS_STEPS: u16 = 10;
 
     pub fn new() -> Box2DPhysics {
         Box2DPhysics {

@@ -66,18 +66,59 @@ impl<'a> System<'a> for TerrainRender {
         };
         match events {
             Some(events) => {
-                println!("events: {}", events.len());
                 // Handle updates
                 for event in events {
                     match event {
                         TerrainUpdate::ChunkAdded(index) => {
-                            println!(" - ChunkAdded: {index}")
+                            let (_, render_target) = match (&chunk, &mut render_target)
+                                .join()
+                                .find(|(chunk, _)| chunk.index == index)
+                            {
+                                Some(value) => value,
+                                None => panic!("Could not find chunk entity for update"),
+                            };
+                            let chunk = match terrain.index_to_chunk(&index) {
+                                Some(chunk) => chunk,
+                                None => continue,
+                            };
+                            render_target.surface.with_lock_mut(|p_data| {
+                                assert!(p_data.len() == chunk.texels.len() * SURFACE_FORMAT_BPP);
+                                // FIXME: This doesn't care about bytes_per_pixel
+                                for xy in 0..chunk.texels.len() {
+                                    let i = xy * SURFACE_FORMAT_BPP;
+                                    let (r, g, b, a) = color_map[&chunk.texels[xy].id];
+                                    p_data[i + 0] = r;
+                                    p_data[i + 1] = g;
+                                    p_data[i + 2] = b;
+                                    p_data[i + 3] = a;
+                                }
+                            })
                         }
-                        TerrainUpdate::ChunkRemoved(index) => {
-                            println!(" - ChunkRemoved: {index}")
-                        }
+                        TerrainUpdate::ChunkRemoved(index) => {}
                         TerrainUpdate::TexelsUpdated(index, changes) => {
-                            println!(" - TexelsUpdated: {index} ({})", changes.len())
+                            let (_, render_target) = match (&chunk, &mut render_target)
+                                .join()
+                                .find(|(chunk, _)| chunk.index == index)
+                            {
+                                Some(value) => value,
+                                None => panic!("Could not find chunk entity for update"),
+                            };
+                            let chunk = match terrain.index_to_chunk(&index) {
+                                Some(chunk) => chunk,
+                                None => continue,
+                            };
+                            render_target.surface.with_lock_mut(|p_data| {
+                                assert!(p_data.len() == chunk.texels.len() * SURFACE_FORMAT_BPP);
+                                // FIXME: This doesn't care about bytes_per_pixel
+                                for xy in 0..chunk.texels.len() {
+                                    let i = xy * SURFACE_FORMAT_BPP;
+                                    let (r, g, b, a) = color_map[&chunk.texels[xy].id];
+                                    p_data[i + 0] = r;
+                                    p_data[i + 1] = g;
+                                    p_data[i + 2] = b;
+                                    p_data[i + 3] = a;
+                                }
+                            })
                         }
                         TerrainUpdate::None => (),
                     }

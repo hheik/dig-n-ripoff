@@ -6,7 +6,7 @@ use box2d_rs::{
     b2_math::B2vec2,
     b2_world::{B2world, B2worldPtr},
     b2rs_common::UserDataType,
-    shapes::{b2_polygon_shape::B2polygonShape, b2_chain_shape::B2chainShape},
+    shapes::{b2_chain_shape::B2chainShape, b2_polygon_shape::B2polygonShape},
 };
 use unsafe_send_sync::UnsafeSendSync;
 
@@ -105,6 +105,68 @@ impl Box2D {
         }
 
         UnsafeBody::new(body_ptr)
+    }
+
+    pub fn replace_shape(
+        body_ptr: UnsafeBody,
+        solid_shapes: Vec<B2polygonShape>,
+        segmented_shapes: Vec<B2chainShape>,
+    ) {
+        // B2body::destroy_fixture(self_, fixture)
+        let mut fixtures = Vec::new();
+        {
+            for fixture_ptr in B2body::get_fixture_list(&RefCell::borrow(&body_ptr))
+                .clone()
+                .iter()
+            {
+                fixtures.push(fixture_ptr);
+            }
+        }
+        for fixture in fixtures {
+            B2body::destroy_fixture(body_ptr.clone().i, fixture);
+        }
+
+        let body_type = body_ptr.borrow().get_type();
+
+        for shape in solid_shapes {
+            let mut fixture_def: B2fixtureDef<UserData> = B2fixtureDef::default();
+            fixture_def.shape = Some(Rc::new(RefCell::new(shape)));
+            match body_type {
+                B2bodyType::B2StaticBody => {
+                    fixture_def.density = 0.0;
+                    fixture_def.friction = 0.3;
+                }
+                B2bodyType::B2KinematicBody => {
+                    fixture_def.density = 1.0;
+                    fixture_def.friction = 0.0;
+                }
+                B2bodyType::B2DynamicBody => {
+                    fixture_def.density = 1.0;
+                    fixture_def.density = 0.3;
+                }
+            }
+            B2body::create_fixture(body_ptr.clone().i, &fixture_def);
+        }
+
+        for shape in segmented_shapes {
+            let mut fixture_def: B2fixtureDef<UserData> = B2fixtureDef::default();
+            fixture_def.shape = Some(Rc::new(RefCell::new(shape)));
+            match body_type {
+                B2bodyType::B2StaticBody => {
+                    fixture_def.density = 0.0;
+                    fixture_def.friction = 0.3;
+                }
+                B2bodyType::B2KinematicBody => {
+                    fixture_def.density = 1.0;
+                    fixture_def.friction = 0.0;
+                }
+                B2bodyType::B2DynamicBody => {
+                    fixture_def.density = 1.0;
+                    fixture_def.density = 0.3;
+                }
+            }
+            B2body::create_fixture(body_ptr.clone().i, &fixture_def);
+        }
     }
 }
 

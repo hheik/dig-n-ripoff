@@ -23,6 +23,7 @@ impl<'a> System<'a> for TerrainPainter {
                     % (time.frame + 1000) as u128)
                     + (global.x * global.x + (global.y * 387)) as u128;
                 if rng % 1000 < 5
+                    // && *index == (Vector2I { x: 1, y: 2 })
                     && match terrain.global_to_texel(&global) {
                         Some(texel) => texel.is_empty(),
                         None => false,

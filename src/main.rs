@@ -76,6 +76,7 @@ pub fn main() {
         .with(TerrainPainter, "terrain_painter", &[])
         // .with(CameraControl, "camera_control", &[])
         .with_thread_local(TerrainSync::new())
+        .with_thread_local(TerrainCollision::new())
         .with_thread_local(Box2DPhysics::new())
         .with_thread_local(TerrainRender::new())
         .with_thread_local(Render)

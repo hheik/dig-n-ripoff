@@ -9,7 +9,7 @@ use crate::{
 };
 
 pub struct PhysicsBody {
-    body: UnsafeBody,
+    pub body: UnsafeBody,
 }
 
 impl PhysicsBody {
