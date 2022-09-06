@@ -78,14 +78,7 @@ impl<'a> System<'a> for TerrainCollision {
                                 None => continue,
                             };
                             // TODO: reduce duplicate code
-                            let now = std::time::SystemTime::now();
                             let islands = marching_square::calculate_collisions(chunk);
-                            println!(
-                                "{}: collision generation took {}ms {} shapes",
-                                index,
-                                now.elapsed().unwrap().as_millis(),
-                                islands.len()
-                            );
                             let mut shapes: Vec<B2chainShape> = Vec::with_capacity(islands.len());
                             for island in islands {
                                 shapes.push(create_segmented_shape(island))

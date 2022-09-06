@@ -22,6 +22,9 @@ impl TerrainRender {
     }
 }
 
+// TODO: Find out why updating chunks cause permanent fps drops, or if terrain renderer is even the problem.
+// Reproduce steps: rapidly paint/erase the same spot, eventually the idle fps just declines.
+// The fps seems stable if terrain render is disabled
 impl<'a> System<'a> for TerrainRender {
     type SystemData = (
         ReadStorage<'a, ChunkIndex>,

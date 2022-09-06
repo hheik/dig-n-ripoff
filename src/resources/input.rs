@@ -1,6 +1,6 @@
 use crate::util::Vector2I;
 
-#[derive(Default, Clone, Copy)]
+#[derive(Debug, Default, Clone, Copy)]
 pub struct MouseState {
     pub buttons: u8,
     pub position: Vector2I,
@@ -11,7 +11,7 @@ impl MouseState {
     pub fn get_button_state(&self, button: &MouseButton) -> bool {
         let index = *button as u8;
         if index == 0 {
-            return false
+            return false;
         }
         self.buttons & (1 << (index - 1)) != 0
     }
@@ -19,7 +19,7 @@ impl MouseState {
     pub fn set_button_state(&mut self, button: &MouseButton, state: bool) {
         let index = *button as u8;
         if index == 0 || self.get_button_state(button) == state {
-            return
+            return;
         }
         self.buttons ^= 1 << (index - 1);
     }
@@ -48,12 +48,12 @@ impl From<sdl2::mouse::MouseButton> for MouseButton {
     }
 }
 
-#[derive(Default, Clone, Copy)]
+#[derive(Debug, Default, Clone, Copy)]
 pub struct InputState {
-    pub mouse: MouseState
+    pub mouse: MouseState,
 }
 
-#[derive(Default)]
+#[derive(Debug, Default)]
 pub struct Input {
     prev_state: InputState,
     curr_state: InputState,
@@ -72,11 +72,13 @@ impl Input {
     }
 
     pub fn mouse_pressed(&self, button: MouseButton) -> bool {
-        !self.prev_state.mouse.get_button_state(&button) && self.curr_state.mouse.get_button_state(&button)
+        !self.prev_state.mouse.get_button_state(&button)
+            && self.curr_state.mouse.get_button_state(&button)
     }
 
     pub fn mouse_released(&self, button: MouseButton) -> bool {
-        self.prev_state.mouse.get_button_state(&button) && !self.curr_state.mouse.get_button_state(&button)
+        self.prev_state.mouse.get_button_state(&button)
+            && !self.curr_state.mouse.get_button_state(&button)
     }
 
     pub fn get_mouse_position(&self) -> Vector2I {
@@ -97,6 +99,6 @@ impl Input {
     }
 
     pub fn curr_state(&self) -> &InputState {
-        &self.prev_state
+        &self.curr_state
     }
 }

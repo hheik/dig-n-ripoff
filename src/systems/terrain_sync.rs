@@ -42,7 +42,7 @@ impl<'a> System<'a> for TerrainSync {
             mut render_target,
             mut physics_body,
             terrain,
-            mut box2d,
+            box2d,
         ): Self::SystemData,
     ) {
         // Add new chunks
@@ -99,7 +99,5 @@ impl<'a> System<'a> for TerrainSync {
         // Remove deleted chunks
         self.chunk_set
             .retain(|index| terrain.index_to_chunk(index).is_some());
-
-        for (physics_body, chunk_index) in (&mut physics_body, &chunk_index).join() {}
     }
 }

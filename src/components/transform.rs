@@ -1,5 +1,5 @@
 use core::ops;
-use std::{fmt::Display, f32::consts::PI};
+use std::{f32::consts::PI, fmt::Display};
 
 use specs::{Component, VecStorage};
 
@@ -16,11 +16,7 @@ pub struct Transform {
 
 impl Transform {
     pub const IDENTITY: Transform = Transform {
-        matrix: [
-            1.0, 0.0,
-            0.0, 1.0,
-            0.0, 0.0
-        ],
+        matrix: [1.0, 0.0, 0.0, 1.0, 0.0, 0.0],
         is_x_flipped: false,
         is_y_flipped: false,
     };
@@ -41,7 +37,7 @@ impl Transform {
                 -self.matrix[2],
                 self.matrix[0],
                 -self.matrix[4],
-                -self.matrix[5]
+                -self.matrix[5],
             ],
             is_x_flipped: false,
             is_y_flipped: false,
@@ -180,7 +176,13 @@ impl Transform {
 
 impl Display for Transform {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{} {} {}", self.get_position(), self.get_rotation().to_degrees(), self.get_scale())
+        write!(
+            f,
+            "{} {} {}",
+            self.get_position(),
+            self.get_rotation().to_degrees(),
+            self.get_scale()
+        )
     }
 }
 
@@ -195,10 +197,10 @@ impl ops::Mul<Transform> for Transform {
                 self.matrix[0] * rhs.matrix[2] + self.matrix[2] * rhs.matrix[3],
                 self.matrix[1] * rhs.matrix[2] + self.matrix[3] * rhs.matrix[3],
                 origin.x,
-                origin.y
+                origin.y,
             ],
             is_x_flipped: self.is_x_flipped != rhs.is_x_flipped,
-            is_y_flipped: self.is_y_flipped != rhs.is_y_flipped
+            is_y_flipped: self.is_y_flipped != rhs.is_y_flipped,
         }
     }
 }

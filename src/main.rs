@@ -3,9 +3,12 @@ use std::f32::consts::PI;
 use box2d_rs::b2_body::B2bodyType;
 use components::*;
 use gl::renderer::{self, UnsafeCanvas};
-use resources::{Box2D, Camera, Terrain, Time, Input, InputState, MouseState};
+use resources::{Box2D, Camera, Input, InputState, Terrain, Time};
 use sdl2::{event::Event, keyboard::Keycode, EventPump, Sdl};
-use specs::{shred::{FetchMut, Fetch}, DispatcherBuilder, World, WorldExt};
+use specs::{
+    shred::{Fetch, FetchMut},
+    DispatcherBuilder, World, WorldExt,
+};
 use systems::*;
 use util::{box2d::create_box, Vector2, Vector2F};
 
@@ -86,15 +89,14 @@ pub fn main() {
         .with_thread_local(Box2DVisualizer)
         .build();
 
-    // let mut mouse_state: (i32, i32, u8);
-    let mut mouse_state = MouseState::default();
+    let mut mouse_state;
 
     'running: loop {
         let now = std::time::SystemTime::now();
 
         {
             let input: Fetch<Input> = world.fetch();
-            mouse_state = input.prev_state().mouse;
+            mouse_state = input.curr_state().mouse;
         }
 
         // TODO: Move out of main.rs
@@ -106,15 +108,40 @@ pub fn main() {
                     keycode: Some(Keycode::Escape),
                     ..
                 } => break 'running,
-                Event::MouseButtonDown { timestamp, window_id, which, mouse_btn, clicks, x, y } => {
+                Event::MouseButtonDown {
+                    timestamp: _,
+                    window_id: _,
+                    which: _,
+                    mouse_btn,
+                    clicks: _,
+                    x: _,
+                    y: _,
+                } => {
                     let button = MouseButton::from(mouse_btn);
                     mouse_state.set_button_state(&button, true);
                 }
-                Event::MouseButtonUp { timestamp, window_id, which, mouse_btn, clicks, x, y } => {
+                Event::MouseButtonUp {
+                    timestamp: _,
+                    window_id: _,
+                    which: _,
+                    mouse_btn,
+                    clicks: _,
+                    x: _,
+                    y: _,
+                } => {
                     let button = MouseButton::from(mouse_btn);
                     mouse_state.set_button_state(&button, false);
                 }
-                Event::MouseMotion { timestamp, window_id, which, mousestate, x, y, xrel, yrel } => {
+                Event::MouseMotion {
+                    timestamp: _,
+                    window_id: _,
+                    which: _,
+                    mousestate: _,
+                    x,
+                    y,
+                    xrel,
+                    yrel,
+                } => {
                     mouse_state.position = Vector2I { x, y };
                     mouse_state.velocity = Vector2I { x: xrel, y: yrel };
                 }
