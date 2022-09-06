@@ -202,3 +202,20 @@ impl ops::Mul<Transform> for Transform {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::util::Vector2F;
+
+    use super::Transform;
+
+    #[test]
+    fn xform() {
+        let a = Transform::new(Vector2F::ZERO, 0.0, Vector2F::ONE * 4.0);
+        let point = Vector2F { x: 5.0, y: 2.0 };
+        let point_inv = Vector2F { x: 20.0, y: 8.0 };
+
+        assert_eq!(a.xform(point), point_inv);
+        assert_eq!(a.xform_inverse(point_inv), point);
+    }
+}

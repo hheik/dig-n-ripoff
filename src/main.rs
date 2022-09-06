@@ -3,11 +3,13 @@ use std::f32::consts::PI;
 use box2d_rs::b2_body::B2bodyType;
 use components::*;
 use gl::renderer::{self, UnsafeCanvas};
-use resources::{Box2D, Camera, Terrain, Time};
+use resources::{Box2D, Camera, Terrain, Time, Input, InputState, MouseState};
 use sdl2::{event::Event, keyboard::Keycode, EventPump, Sdl};
-use specs::{shred::FetchMut, DispatcherBuilder, World, WorldExt};
+use specs::{shred::{FetchMut, Fetch}, DispatcherBuilder, World, WorldExt};
 use systems::*;
 use util::{box2d::create_box, Vector2, Vector2F};
+
+use crate::{resources::MouseButton, util::Vector2I};
 
 mod components;
 mod gl;
@@ -71,6 +73,7 @@ pub fn main() {
     world.insert(camera);
     world.insert(canvas);
     world.insert(box2d);
+    world.insert(Input::new());
 
     let mut dispatcher = DispatcherBuilder::new()
         .with(TerrainPainter, "terrain_painter", &[])
@@ -83,9 +86,19 @@ pub fn main() {
         .with_thread_local(Box2DVisualizer)
         .build();
 
+    // let mut mouse_state: (i32, i32, u8);
+    let mut mouse_state = MouseState::default();
+
     'running: loop {
         let now = std::time::SystemTime::now();
 
+        {
+            let input: Fetch<Input> = world.fetch();
+            mouse_state = input.prev_state().mouse;
+        }
+
+        // TODO: Move out of main.rs
+        // TODO: Fix lingering mousedown bug
         for event in event_pump.poll_iter() {
             match event {
                 Event::Quit { .. }
@@ -93,8 +106,25 @@ pub fn main() {
                     keycode: Some(Keycode::Escape),
                     ..
                 } => break 'running,
+                Event::MouseButtonDown { timestamp, window_id, which, mouse_btn, clicks, x, y } => {
+                    let button = MouseButton::from(mouse_btn);
+                    mouse_state.set_button_state(&button, true);
+                }
+                Event::MouseButtonUp { timestamp, window_id, which, mouse_btn, clicks, x, y } => {
+                    let button = MouseButton::from(mouse_btn);
+                    mouse_state.set_button_state(&button, false);
+                }
+                Event::MouseMotion { timestamp, window_id, which, mousestate, x, y, xrel, yrel } => {
+                    mouse_state.position = Vector2I { x, y };
+                    mouse_state.velocity = Vector2I { x: xrel, y: yrel };
+                }
                 _ => {}
             }
+        }
+
+        {
+            let mut input: FetchMut<Input> = world.fetch_mut();
+            input.push_state(InputState { mouse: mouse_state });
         }
 
         {
@@ -104,12 +134,6 @@ pub fn main() {
 
         dispatcher.dispatch(&world);
         world.maintain();
-        // {
-        //     let mut terrain: FetchMut<Terrain> = world.fetch_mut();
-        //     for (_, chunk) in terrain.chunk_iter_mut() {
-        //         chunk.is_dirty = false;
-        //     }
-        // }
 
         {
             let mut canvas: FetchMut<UnsafeCanvas> = world.fetch_mut();
