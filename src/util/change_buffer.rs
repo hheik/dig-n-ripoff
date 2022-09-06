@@ -30,6 +30,7 @@ where
     pub fn get_listener(&mut self) -> Listener {
         let listener = self.current_point_in_time;
         self.listeners.push(listener);
+        self.current_point_in_time += 1;
         listener
     }
 
