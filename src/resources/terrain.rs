@@ -99,9 +99,14 @@ impl Terrain {
     }
 
     pub fn set_texel(&mut self, global: &Vector2I, id: TexelID) {
-        match self.global_to_chunk_mut(global) {
+        let index = global_to_index(global);
+        match self.index_to_chunk_mut(&index) {
             Some(chunk) => chunk.set_texel(&global_to_local(global), id),
-            None => {}
+            None => {
+                let mut chunk = Chunk::new();
+                chunk.set_texel(&global_to_local(global), id);
+                self.add_chunk(index, chunk);
+            }
         }
     }
 

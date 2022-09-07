@@ -18,7 +18,7 @@ pub fn wrapping_quotient(dividend: i32, divisor: i32) -> i32 {
 pub fn wrapping_remainder(dividend: i32, divisor: i32) -> i32 {
     let res = dividend % divisor;
     if dividend < 0 {
-        divisor + res
+        (divisor + res) % divisor
     } else {
         res
     }

@@ -26,8 +26,8 @@ impl<'a> TerrainPainter {
         }
     }
 
-    fn mouse_to_world_pos(mouse_position: Vector2I) -> Vector2I {
-        mouse_position / 4 // FIXME: harcoded value
+    fn mouse_to_world_pos(camera: &Camera, mouse_position: Vector2I) -> Vector2I {
+        (camera.transform.get_position().rounded() + mouse_position) / 4 // FIXME: harcoded value
     }
 }
 
@@ -38,7 +38,7 @@ impl<'a> System<'a> for TerrainPainter {
         let mut updates: Vec<(Vector2I, TexelID)> = Vec::new();
 
         // TODO: Fix scaled transforms, remove hardcoded values
-        let brush_pos = Self::mouse_to_world_pos(input.get_mouse_position());
+        let brush_pos = Self::mouse_to_world_pos(&camera, input.get_mouse_position());
         if input.mouse_held(MouseButton::Left) {
             self.paint_circle(&mut terrain, brush_pos, 16, 1)
         }

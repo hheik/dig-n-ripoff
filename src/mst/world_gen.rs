@@ -14,6 +14,7 @@ const DATA_PATH: &str = "./assets/terrain/complex_terrain.png";
 // const DATA_PATH: &str = "./assets/terrain/chunk_0.png";
 // const DATA_PATH: &str = "./assets/terrain/chunk_1.png";
 // const DATA_PATH: &str = "./assets/terrain/solid_4x4.png";
+// const DATA_PATH: &str = "./assets/terrain/vertical.png";
 
 fn read_image(path: &str) -> Surface<'static> {
     match sdl2::image::LoadSurface::from_file(path) {
