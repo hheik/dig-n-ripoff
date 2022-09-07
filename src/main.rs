@@ -52,7 +52,6 @@ pub fn main() {
     let box_size = 12.0;
     let separation = 1.5;
     for y in 0..pyramid_size {
-        // for x in 0..(y * 2) + 1 {
         for x in 0..y + 1 {
             let c: u8 = (x * 64 % 256) as u8;
             let pos = Vector2F {
@@ -79,7 +78,7 @@ pub fn main() {
     world.insert(Input::new());
 
     let mut dispatcher = DispatcherBuilder::new()
-        .with(TerrainPainter, "terrain_painter", &[])
+        .with(TerrainPainter::new(), "terrain_painter", &[])
         .with(CameraControl::new(), "camera_control", &[])
         .with_thread_local(TerrainSync::new())
         .with_thread_local(TerrainCollision::new())
@@ -98,6 +97,8 @@ pub fn main() {
             let input: Fetch<Input> = world.fetch();
             mouse_state = input.curr_state().mouse;
         }
+
+        mouse_state.scroll = Vector2I::ZERO;
 
         // TODO: Move out of main.rs
         // TODO: Fix lingering mousedown bug
@@ -131,6 +132,15 @@ pub fn main() {
                 } => {
                     let button = MouseButton::from(mouse_btn);
                     mouse_state.set_button_state(&button, false);
+                }
+                Event::MouseWheel { timestamp: _,
+                    window_id: _,
+                    which: _,
+                    x,
+                    y,
+                    direction: _,
+                } => {
+                    mouse_state.scroll = Vector2I { x, y };
                 }
                 Event::MouseMotion {
                     timestamp: _,

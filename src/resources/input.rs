@@ -5,6 +5,7 @@ pub struct MouseState {
     pub buttons: u8,
     pub position: Vector2I,
     pub velocity: Vector2I,
+    pub scroll: Vector2I,
 }
 
 impl MouseState {
@@ -87,6 +88,10 @@ impl Input {
 
     pub fn get_mouse_velocity(&self) -> Vector2I {
         self.curr_state.mouse.velocity
+    }
+
+    pub fn get_mouse_scroll(&self) -> Vector2I {
+        self.curr_state.mouse.scroll
     }
 
     pub fn push_state(&mut self, state: InputState) {
