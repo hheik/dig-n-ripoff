@@ -3,12 +3,15 @@ use std::collections::HashSet;
 use crate::{
     components::{ChunkIndex, PhysicsBody, RenderTarget, Transform},
     mst::{chunk::Chunk, marching_square, utils::index_to_global},
-    resources::{Box2D, Terrain, UnsafeBox2D},
-    util::{box2d::create_segmented_shape, Vector2F, Vector2I},
+    resources::{Terrain, UnsafeBox2D},
+    util::{
+        box2d::{create_body, create_segmented_shape},
+        SortingOrder, Vector2F, Vector2I,
+    },
 };
 
 use box2d_rs::{b2_body::B2bodyType, shapes::b2_chain_shape::B2chainShape};
-use specs::{Entities, Join, Read, System, WriteStorage};
+use specs::{Entities, Read, System, WriteStorage};
 
 pub struct TerrainSync {
     chunk_set: HashSet<Vector2I>,
@@ -64,7 +67,7 @@ impl<'a> System<'a> for TerrainSync {
                     shapes.push(create_segmented_shape(island))
                 }
 
-                let body = PhysicsBody::new(Box2D::create_body(
+                let body = PhysicsBody::new(create_body(
                     box2d.world_ptr.clone(),
                     Some(B2bodyType::B2StaticBody),
                     vec![],
@@ -87,6 +90,8 @@ impl<'a> System<'a> for TerrainSync {
                             Chunk::SIZE.x as u32,
                             Chunk::SIZE.y as u32,
                             Vector2F::ZERO,
+                            SortingOrder::Default as i16,
+                            false,
                         ),
                         &mut render_target,
                     )

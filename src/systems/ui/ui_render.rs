@@ -1,22 +1,12 @@
-use lazy_static::lazy_static;
-use sdl2::ttf::{Font, Sdl2TtfContext};
 use specs::{Join, ReadStorage, System, WriteStorage};
 
 use crate::components::{text_element::TextElement, RenderTarget};
 
-const FONT_PATH: &str = "./assets/fonts/VeniceClassic.ttf";
-
-pub struct UIRender {
-    font: Font<'static, 'static>,
-}
+pub struct UIRender;
 
 impl UIRender {
-    pub fn new() -> UIRender {
-        let font_context = sdl2::ttf::init().expect("Could not initialize ttf font context");
-        let font = font_context
-            .load_font(FONT_PATH, 19)
-            .expect("Could not load font");
-        UIRender { font }
+    pub fn new() -> Self {
+        UIRender {}
     }
 }
 
@@ -27,6 +17,17 @@ impl<'a> System<'a> for UIRender {
     );
 
     fn run(&mut self, (mut render_target, text): Self::SystemData) {
-        for (render_target, text) in (&mut render_target, &text).join() {}
+        for (render_target, element) in (&mut render_target, &text).join() {
+            render_target.set_surface(
+                match self
+                    .font
+                    .render(element.get_text())
+                    .solid(element.get_color())
+                {
+                    Ok(surface) => surface,
+                    Err(error) => panic!("Failed to render text: {error:?}"),
+                },
+            );
+        }
     }
 }

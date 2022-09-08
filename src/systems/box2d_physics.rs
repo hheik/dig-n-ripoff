@@ -25,11 +25,11 @@ impl Box2DPhysics {
 impl<'a> System<'a> for Box2DPhysics {
     type SystemData = (
         WriteStorage<'a, Transform>,
-        ReadStorage<'a, PhysicsBody>,
-        Write<'a, UnsafeBox2D>,
+        WriteStorage<'a, PhysicsBody>,
+        Read<'a, UnsafeBox2D>,
         Read<'a, Time>,
     );
-    fn run(&mut self, (mut transform, physics_body, mut box2d, time): Self::SystemData) {
+    fn run(&mut self, (mut transform, mut physics_body, box2d, time): Self::SystemData) {
         let mut world = box2d.world_ptr.borrow_mut();
         // Perform a single, multiple, or no physics steps as needed
         // Make sure this won't send the engine in a cascade
@@ -58,9 +58,10 @@ impl<'a> System<'a> for Box2DPhysics {
         }
 
         // Update transforms
-        for (transform, physics_body) in (&mut transform, &physics_body).join() {
+        for (transform, physics_body) in (&mut transform, &mut physics_body).join() {
             transform.set_position(physics_body.get_position());
             transform.set_rotation(physics_body.get_rotation());
+            physics_body.body.borrow_mut().set_angular_velocity(1.0);
         }
     }
 }

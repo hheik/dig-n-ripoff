@@ -5,7 +5,7 @@ use crate::{
     util::Vector2F,
 };
 use sdl2::rect::{Point, Rect};
-use specs::{Join, Read, ReadStorage, System, Write};
+use specs::{rayon::slice::ParallelSliceMut, Join, Read, ReadStorage, System, Write};
 
 pub struct Render;
 impl<'a> System<'a> for Render {
@@ -21,9 +21,18 @@ impl<'a> System<'a> for Render {
             Some(canvas) => canvas,
             None => return,
         };
-        let cam_transform = camera.transform.with_rotation(0.0);
 
-        for (transform, render_target) in (&transform, &render_target).join() {
+        let mut surfaces: Vec<(&Transform, &RenderTarget)> =
+            (&transform, &render_target).join().collect();
+        surfaces.par_sort_by(|a, b| a.1.sorting_order.cmp(&b.1.sorting_order));
+
+        for (transform, render_target) in surfaces {
+            let cam_transform = if render_target.use_screen_space {
+                Transform::IDENTITY.with_scale(Vector2F::ONE)
+            } else {
+                camera.transform.with_rotation(0.0)
+            };
+
             let src = render_target.surface.rect();
             let (size_x, size_y) = src.size();
             let pivot_offset = render_target.pivot
@@ -34,8 +43,7 @@ impl<'a> System<'a> for Render {
             let pos = transform.get_position() - pivot_offset;
 
             let dst_start = cam_transform.xform_inverse(pos).rounded();
-            let dst_end = camera
-                .transform
+            let dst_end = cam_transform
                 .xform_inverse(Vector2F {
                     x: pos.x + size_x as f32,
                     y: pos.y + size_y as f32,

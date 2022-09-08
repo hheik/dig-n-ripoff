@@ -34,6 +34,14 @@ impl<'a> System<'a> for CameraControl {
             ));
         }
 
+        let scale = camera.transform.get_scale();
+        camera
+            .transform
+            .set_scale(Vector2F::ONE * (scale.x + input.get_mouse_scroll().y as f32 * 0.1));
+        // if input.get_mouse_scroll().y == 0 {
+        //     println!("Scale: {}", camera.transform.get_scale());
+        // }
+
         // let lifetime = time.lifetime.elapsed().unwrap().as_secs_f32();
         // let t = (lifetime * 0.5).sin() * 0.5 + 0.5;
         // camera

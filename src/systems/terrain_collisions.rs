@@ -1,12 +1,13 @@
-use std::collections::HashMap;
-
 use crate::{
     components::{ChunkIndex, PhysicsBody, Transform},
-    mst::{marching_square, texel::TexelID},
-    resources::{Box2D, Terrain, TerrainUpdate, UnsafeBox2D},
-    util::{box2d::create_segmented_shape, Listener},
+    mst::marching_square,
+    resources::{Terrain, TerrainUpdate, UnsafeBox2D},
+    util::{
+        box2d::{create_segmented_shape, replace_shape},
+        Listener,
+    },
 };
-use box2d_rs::{b2_body::B2bodyType, shapes::b2_chain_shape::B2chainShape};
+use box2d_rs::shapes::b2_chain_shape::B2chainShape;
 use specs::{Join, Read, ReadStorage, System, Write, WriteStorage};
 
 pub struct TerrainCollision {
@@ -84,7 +85,7 @@ impl<'a> System<'a> for TerrainCollision {
                                 shapes.push(create_segmented_shape(island))
                             }
 
-                            Box2D::replace_shape(physics_body.body.clone(), vec![], shapes);
+                            replace_shape(physics_body.body.clone(), vec![], shapes);
                         }
                         TerrainUpdate::None => (),
                     }
