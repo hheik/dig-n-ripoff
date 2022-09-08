@@ -6,6 +6,7 @@ mod terrain_collisions;
 mod terrain_painter;
 mod terrain_render;
 mod terrain_sync;
+pub mod ui;
 
 pub use box2d_physics::*;
 pub use box2d_visualizer::*;
