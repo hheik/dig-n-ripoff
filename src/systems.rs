@@ -1,6 +1,7 @@
 mod box2d_physics;
 mod box2d_visualizer;
 mod camera_control;
+pub mod debug;
 mod render;
 mod terrain_collisions;
 mod terrain_painter;

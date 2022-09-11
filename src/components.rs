@@ -1,4 +1,5 @@
 mod chunk_index;
+pub mod flags;
 mod physics_body;
 mod render_target;
 mod transform;

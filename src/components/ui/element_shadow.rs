@@ -11,7 +11,7 @@ pub struct ElementShadow {
 }
 
 impl ElementShadow {
-    const DEFAULT_SHADOW_COLOR: Color = Color {
+    pub const DEFAULT_SHADOW_COLOR: Color = Color {
         r: 25,
         g: 20,
         b: 20,

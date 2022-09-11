@@ -4,7 +4,7 @@ use sdl2::{
     render::Canvas,
     surface::Surface,
     video::Window,
-    EventPump, Sdl,
+    EventPump, Sdl, ttf::Font,
 };
 
 pub const INIT_WINDOW_SIZE: (u32, u32) = (1024, 1024);
@@ -17,6 +17,7 @@ use crate::util::Vector2I;
 
 pub type UnsafeSurface<'a> = UnsafeSendSync<Surface<'a>>;
 pub type UnsafeCanvas = UnsafeSendSync<Canvas<Window>>;
+pub type UnsafeFont = UnsafeSendSync<Font<'static, 'static>>;
 
 pub fn init() -> (Sdl, UnsafeCanvas, EventPump) {
     let sdl_context = match sdl2::init() {

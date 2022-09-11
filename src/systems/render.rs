@@ -65,17 +65,26 @@ impl<'a> System<'a> for Render {
 
             match shadow {
                 Some(shadow) => {
+                    let pos = pos + Vector2F::from(shadow.offset);
+                    let dst_start = cam_transform.xform_inverse(pos).rounded();
+                    let dst_end = cam_transform
+                        .xform_inverse(Vector2F {
+                            x: pos.x + size_x as f32,
+                            y: pos.y + size_y as f32,
+                        })
+                        .rounded();
+                    let dst = Rect::new(
+                        dst_start.x,
+                        dst_start.y,
+                        (dst_end.x - dst_start.x) as u32,
+                        (dst_end.y - dst_start.y) as u32,
+                    );
                     renderer::draw_surface_rotated(
                         &mut canvas,
                         &render_target.surface,
                         shadow.color,
                         src,
-                        Rect::new(
-                            dst.x + shadow.offset.x,
-                            dst.y + shadow.offset.y,
-                            dst.width(),
-                            dst.height(),
-                        ),
+                        dst,
                         transform.get_rotation() as f64,
                         Point::new(
                             size_x as i32

@@ -31,9 +31,9 @@ impl Box2D {
     };
 
     fn new() -> Box2D {
-        // let gravity: B2vec2 = B2vec2 { x: 0.0, y: 100.0 };
+        let gravity: B2vec2 = B2vec2 { x: 0.0, y: 100.0 };
         // let gravity: B2vec2 = B2vec2 { x: 0.0, y: 1.0 };
-        let gravity: B2vec2 = B2vec2 { x: 0.0, y: 0.0 };
+        // let gravity: B2vec2 = B2vec2 { x: 0.0, y: 0.0 };
         let world_ptr: B2worldPtr<UserData> = B2world::new(gravity);
 
         Box2D { gravity, world_ptr }

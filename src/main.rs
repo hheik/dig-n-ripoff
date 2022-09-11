@@ -1,7 +1,11 @@
 use std::f32::consts::PI;
 
 use box2d_rs::b2_body::B2bodyType;
-use components::{ui::*, *};
+use components::{
+    flags,
+    ui::{self, ElementShadow},
+    *,
+};
 use gl::renderer::{self, UnsafeCanvas};
 use resources::{Box2D, Camera, Input, InputState, Terrain, Time};
 use sdl2::{event::Event, keyboard::Keycode, EventPump, Sdl};
@@ -9,7 +13,7 @@ use specs::{
     shred::{Fetch, FetchMut},
     Builder, DispatcherBuilder, World, WorldExt,
 };
-use systems::{ui::UIRender, *};
+
 use util::{box2d::create_box, SortingOrder, Vector2, Vector2F};
 
 use crate::{resources::MouseButton, util::Vector2I};
@@ -25,10 +29,11 @@ pub fn main() {
     let mut world = World::new();
     world.register::<Transform>();
     world.register::<ChunkIndex>();
-    world.register::<TextElement>();
-    world.register::<ElementShadow>();
     world.register::<RenderTarget>();
     world.register::<PhysicsBody>();
+    world.register::<ui::TextElement>();
+    world.register::<ui::ElementShadow>();
+    world.register::<flags::DebugText>();
 
     // Init window
     let (_, canvas, mut event_pump): (Sdl, UnsafeCanvas, EventPump) = gl::renderer::init();
@@ -80,15 +85,16 @@ pub fn main() {
     world.insert(Input::new());
 
     let mut dispatcher = DispatcherBuilder::new()
-        .with(TerrainPainter::new(), "terrain_painter", &[])
-        .with(CameraControl::new(), "camera_control", &[])
-        .with_thread_local(TerrainSync::new())
-        .with_thread_local(TerrainCollision::new())
-        .with_thread_local(Box2DPhysics::new())
-        .with_thread_local(TerrainRender::new())
-        .with_thread_local(UIRender::new())
-        .with_thread_local(Render)
-        .with_thread_local(Box2DVisualizer)
+        .with(systems::TerrainPainter::new(), "terrain_painter", &[])
+        .with(systems::CameraControl::new(), "camera_control", &[])
+        .with(systems::debug::DebugInfo::new(), "debug_info", &[])
+        .with_thread_local(systems::TerrainSync::new())
+        .with_thread_local(systems::TerrainCollision::new())
+        .with_thread_local(systems::Box2DPhysics::new())
+        .with_thread_local(systems::TerrainRender::new())
+        .with_thread_local(systems::ui::UIRender::new())
+        .with_thread_local(systems::Render)
+        .with_thread_local(systems::Box2DVisualizer)
         .build();
 
     world
@@ -101,8 +107,9 @@ pub fn main() {
             SortingOrder::Ui as i16,
             true,
         ))
-        .with(TextElement::from_string("fps: 0"))
-        .with(ElementShadow::new())
+        .with(ui::TextElement::from_string("fps: 0"))
+        .with(ui::ElementShadow::new())
+        .with(flags::DebugText)
         .build();
 
     let mut mouse_state;

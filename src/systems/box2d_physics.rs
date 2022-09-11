@@ -61,7 +61,6 @@ impl<'a> System<'a> for Box2DPhysics {
         for (transform, physics_body) in (&mut transform, &mut physics_body).join() {
             transform.set_position(physics_body.get_position());
             transform.set_rotation(physics_body.get_rotation());
-            physics_body.body.borrow_mut().set_angular_velocity(1.0);
         }
     }
 }
