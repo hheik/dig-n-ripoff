@@ -74,6 +74,7 @@ pub fn draw_surface(canvas: &mut UnsafeCanvas, surface: &UnsafeSurface, src: Rec
 pub fn draw_surface_rotated(
     canvas: &mut UnsafeCanvas,
     surface: &UnsafeSurface,
+    modulation: Color,
     src: Rect,
     dst: Rect,
     angle: f64,
@@ -83,7 +84,11 @@ pub fn draw_surface_rotated(
 ) {
     let texture_creator = canvas.texture_creator();
     let texture = match surface.as_texture(&texture_creator) {
-        Ok(texture) => texture,
+        Ok(mut texture) => {
+            texture.set_color_mod(modulation.r, modulation.g, modulation.b);
+            texture.set_alpha_mod(modulation.a);
+            texture
+        }
         Err(error) => panic!("Failed to create texture from surface: {error:?}"),
     };
     match canvas.copy_ex(

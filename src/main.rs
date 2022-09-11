@@ -1,7 +1,7 @@
 use std::f32::consts::PI;
 
 use box2d_rs::b2_body::B2bodyType;
-use components::{text_element::TextElement, *};
+use components::{ui::*, *};
 use gl::renderer::{self, UnsafeCanvas};
 use resources::{Box2D, Camera, Input, InputState, Terrain, Time};
 use sdl2::{event::Event, keyboard::Keycode, EventPump, Sdl};
@@ -26,6 +26,7 @@ pub fn main() {
     world.register::<Transform>();
     world.register::<ChunkIndex>();
     world.register::<TextElement>();
+    world.register::<ElementShadow>();
     world.register::<RenderTarget>();
     world.register::<PhysicsBody>();
 
@@ -101,6 +102,7 @@ pub fn main() {
             true,
         ))
         .with(TextElement::from_string("fps: 0"))
+        .with(ElementShadow::new())
         .build();
 
     let mut mouse_state;

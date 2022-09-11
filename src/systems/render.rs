@@ -1,10 +1,13 @@
 use crate::{
-    components::{RenderTarget, Transform},
+    components::{ui::ElementShadow, RenderTarget, Transform},
     gl::renderer::{self, UnsafeCanvas},
     resources::Camera,
     util::Vector2F,
 };
-use sdl2::rect::{Point, Rect};
+use sdl2::{
+    pixels::Color,
+    rect::{Point, Rect},
+};
 use specs::{rayon::slice::ParallelSliceMut, Join, Read, ReadStorage, System, Write};
 
 pub struct Render;
@@ -12,21 +15,24 @@ impl<'a> System<'a> for Render {
     type SystemData = (
         ReadStorage<'a, Transform>,
         ReadStorage<'a, RenderTarget<'static>>,
+        ReadStorage<'a, ElementShadow>,
         Read<'a, Camera>,
         Option<Write<'a, UnsafeCanvas>>,
     );
 
-    fn run(&mut self, (transform, render_target, camera, canvas): Self::SystemData) {
+    fn run(&mut self, (transform, render_target, shadow, camera, canvas): Self::SystemData) {
         let mut canvas = match canvas {
             Some(canvas) => canvas,
             None => return,
         };
 
-        let mut surfaces: Vec<(&Transform, &RenderTarget)> =
-            (&transform, &render_target).join().collect();
+        let mut surfaces: Vec<(&Transform, &RenderTarget, Option<&ElementShadow>)> =
+            (&transform, &render_target, (&shadow).maybe())
+                .join()
+                .collect();
         surfaces.par_sort_by(|a, b| a.1.sorting_order.cmp(&b.1.sorting_order));
 
-        for (transform, render_target) in surfaces {
+        for (transform, render_target, shadow) in surfaces {
             let cam_transform = if render_target.use_screen_space {
                 Transform::IDENTITY.with_scale(Vector2F::ONE)
             } else {
@@ -56,10 +62,39 @@ impl<'a> System<'a> for Render {
                 (dst_end.x - dst_start.x) as u32,
                 (dst_end.y - dst_start.y) as u32,
             );
+
+            match shadow {
+                Some(shadow) => {
+                    renderer::draw_surface_rotated(
+                        &mut canvas,
+                        &render_target.surface,
+                        shadow.color,
+                        src,
+                        Rect::new(
+                            dst.x + shadow.offset.x,
+                            dst.y + shadow.offset.y,
+                            dst.width(),
+                            dst.height(),
+                        ),
+                        transform.get_rotation() as f64,
+                        Point::new(
+                            size_x as i32
+                                * (cam_transform.get_scale().x * render_target.pivot.x) as i32,
+                            size_y as i32
+                                * (cam_transform.get_scale().y * render_target.pivot.y) as i32,
+                        ),
+                        transform.get_scale().x < 0.0,
+                        transform.get_scale().y < 0.0,
+                    );
+                }
+                None => (),
+            }
+
             // FIXME: Camera rotation is broken
             renderer::draw_surface_rotated(
                 &mut canvas,
                 &render_target.surface,
+                Color::WHITE,
                 src,
                 dst,
                 transform.get_rotation() as f64,
@@ -67,8 +102,8 @@ impl<'a> System<'a> for Render {
                     size_x as i32 * (cam_transform.get_scale().x * render_target.pivot.x) as i32,
                     size_y as i32 * (cam_transform.get_scale().y * render_target.pivot.y) as i32,
                 ),
-                false,
-                false,
+                transform.get_scale().x < 0.0,
+                transform.get_scale().y < 0.0,
             );
         }
     }
